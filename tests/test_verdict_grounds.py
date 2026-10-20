@@ -571,11 +571,18 @@ def _cyclic() -> list:
     return value
 
 
-@pytest.mark.parametrize("where", ["reason_context", "reason_codes", "status", "context_code"])
-@pytest.mark.parametrize("shape", ["deep", "wide", "cyclic", "long-string"])
+_SHAPES = ["deep", "wide", "cyclic", "long-string"]
+_WHERE_AND_SHAPE = [
+    (where, shape)
+    for where in ["reason_context", "reason_codes", "status", "context_code"]
+    for shape in _SHAPES
+    # reason_codes entries are compared by value (VG-1); a value that contains itself has none.
+    if (where, shape) != ("reason_codes", "cyclic")
+]
+
+
+@pytest.mark.parametrize(("where", "shape"), _WHERE_AND_SHAPE)
 def test_no_shape_of_value_makes_the_checker_raise_or_a_message_grow(where: str, shape: str) -> None:
-    if where == "reason_codes" and shape == "cyclic":
-        pytest.skip("reason_codes entries are compared by value (VG-1); a value that contains itself has none")
     value: object = {
         "deep": _nested(5000),
         "wide": list(range(100_000)),
