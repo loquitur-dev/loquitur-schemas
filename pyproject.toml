@@ -1,0 +1,98 @@
+[build-system]
+# Pinned exactly: the wheel's bytes depend on the backend that builds it, so a build
+# reproduces the published wheel only with the same setuptools.
+requires = ["setuptools==84.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "loquitur-schemas"
+version = "0.1.0"
+description = "JSON Schemas, reason-code catalog and registered vocabularies of the Loquitur protocol, with a validator and the registry signing message (preview)."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  # >=48.0.1 is a SECURITY floor: wheels before it statically link an OpenSSL
+  # affected by GHSA-537c-gmf6-5ccf.
+  "cryptography>=48.0.1,<51",
+  # The release the canonical bytes are tested against, and its minor line: a 0.x minor
+  # release may change the serialization this package hashes and signs.
+  "rfc8785>=0.1.4,<0.2",
+]
+license = "MIT OR Apache-2.0"
+license-files = ["LICENSE-APACHE", "LICENSE-MIT", "NOTICE"]
+authors = [
+  {name = "Andrea Venè"}
+]
+keywords = ["loquitur", "schemas", "rwa", "verification", "protocol"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Typing :: Typed",
+]
+
+[project.scripts]
+loquitur-schema-validate = "loquitur.schemas.cli:main"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<10",
+  "build>=1.2",
+  "jsonschema>=4.21,<5",
+  "pyyaml>=6.0.2,<7",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["loquitur", "loquitur.*"]
+namespaces = true
+
+[tool.setuptools.package-data]
+"loquitur.schemas" = ["py.typed", "data/*.md", "data/*.json", "data/reason_codes_catalog/*.json", "data/reason_codes_catalog/*/*.json", "data/registered_vocabularies/*.json", "types/*.d.ts", "types/*.json", "compatibility_baselines/*.json"]
+
+[project.urls]
+# These are locators, unlike the `$id` values inside the schemas, which are identifiers
+# that need not resolve. PyPI renders each of these as a clickable link on the project
+# page, so a dead one is a broken promise on the first screen a reviewer sees.
+# Identifiers live under `loquitur.dev`: protocol data schemas on `schemas.loquitur.dev`,
+# and the governance schemas in the conformance corpus on `governance.loquitur.dev`.
+# The GitHub owner appears four times below and nowhere else in this file. It is called out
+# here because these four URLs are copied verbatim into the PyPI package metadata at upload,
+# and PyPI does not allow a released version's metadata to be edited afterwards: a wrong
+# owner here is wrong for the life of that release.
+Homepage = "https://github.com/loquitur-dev/loquitur-schemas"
+Repository = "https://github.com/loquitur-dev/loquitur-schemas"
+Documentation = "https://github.com/loquitur-dev/loquitur-schemas#readme"
+Issues = "https://github.com/loquitur-dev/loquitur-schemas/issues"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-config --strict-markers"
+
+[tool.mypy]
+# The package ships py.typed and declares `Typing :: Typed`, so it type-checks under the
+# strictest settings a consumer may run. CI runs `mypy` with this configuration.
+packages = ["loquitur.schemas"]
+mypy_path = "src"
+strict = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+# `loquitur` is this repository's own namespace package: an import of it is first-party in
+# every file, also where the module it names is not under src/.
+known-first-party = ["loquitur"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests may keep long fixture strings, import after a module docstring/sys.path shim,
+# and assert broad exceptions for frozen-dataclass immutability probes.
+"tests/**" = ["E501", "E402", "B017"]

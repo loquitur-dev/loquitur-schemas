@@ -1,0 +1,22 @@
+{
+  "bundle_id": "bundle-001",
+  "coverage": {
+    "recommended_pct": 0.0,
+    "recommended_present": 0,
+    "recommended_total": 1,
+    "required_pct": 100.0,
+    "required_present": 2,
+    "required_total": 2
+  },
+  "object_type": "coverage_summary",
+  "readiness": {
+    "blockers": [],
+    "blocking_reasons": [],
+    "publish_ready": true,
+    "status": "pass",
+    "verify_ready": true,
+    "warnings": [],
+    "warnings_detail": []
+  },
+  "schema_version": "v2"
+}

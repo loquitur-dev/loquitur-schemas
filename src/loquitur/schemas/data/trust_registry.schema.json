@@ -1,0 +1,241 @@
+{
+  "$id": "https://schemas.loquitur.dev/v1/trust_registry.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "example": {
+    "effective_at": "2026-04-29T12:00:00Z",
+    "entries": [
+      {
+        "allowed_asset_types": [
+          "property",
+          "fund_nav"
+        ],
+        "allowed_workflows": [
+          "property_pre_listing",
+          "property_review",
+          "fund_nav_initial",
+          "fund_nav_update"
+        ],
+        "effective_from": "2026-01-01T00:00:00Z",
+        "expires_at": "2026-04-29T11:59:59Z",
+        "issuer_display_name": "Synthetic Mid-Market RE Fund I Issuer",
+        "issuer_id": "issuer_synthetic_demo",
+        "issuer_key_id": "demo-key-1",
+        "key_type": "secp256k1",
+        "notes": "Synthetic demo issuer only. An earlier demo key, rotated out: its window ended before this registry takes effect, so no evaluation time inside the registry's window finds it in force.",
+        "public_key_hex": "04a5280b22a985d9cddce09e75ce63b5b46d03f0f13e268a58ba733554e19f56bda5e370efc296ff24b4ce7bc4694886c8f81c1a0ac8ff6e46a504d1fe504be78d",
+        "revocation_reason": null,
+        "revoked_at": null,
+        "status": "active"
+      },
+      {
+        "allowed_asset_types": [
+          "property",
+          "fund_nav"
+        ],
+        "allowed_workflows": [
+          "property_pre_listing",
+          "property_review",
+          "fund_nav_initial",
+          "fund_nav_update"
+        ],
+        "effective_from": "2026-04-29T12:00:00Z",
+        "expires_at": "2099-12-31T23:59:59Z",
+        "issuer_display_name": "Synthetic Mid-Market RE Fund I Issuer",
+        "issuer_id": "issuer_synthetic_demo",
+        "issuer_key_id": "demo-key-2",
+        "key_type": "secp256k1",
+        "notes": "Synthetic demo issuer only. Not a production issuer authorization. The registry signature below is a placeholder and does not verify. The window runs to a symbolic far-future instant on purpose: an example with a real expiry date expires, and a reader who pastes it after that date gets TRUST_REGISTRY_EXPIRED with no way to tell a stale example from a working check.",
+        "public_key_hex": "049dd6b8f8236d4cda3a1b8a533a2ba1b83c002939ed5ceb7804d69bf8022160b8f3d0dd9e830076203a82f38c668ac93edbd47cb8cba7a311f3c9025262806efd",
+        "revocation_reason": null,
+        "revoked_at": null,
+        "status": "active"
+      }
+    ],
+    "expires_at": "2099-12-31T23:59:59Z",
+    "issued_at": "2026-04-29T12:00:00Z",
+    "object_type": "trust_registry",
+    "registry_operator_id": "operator_loquitur_demo",
+    "registry_version": "0.1.0-demo",
+    "schema_version": "v1",
+    "signature": {
+      "algorithm": "secp256k1_ecdsa_sha256",
+      "key_id": "trust-registry-demo-key",
+      "signature": "demo-trust-registry-signature-placeholder-non-production"
+    },
+    "trust_registry_id": "tr_synthetic_demo_0001"
+  },
+  "properties": {
+    "effective_at": {
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)Z$",
+      "type": "string"
+    },
+    "entries": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "allowed_asset_types": {
+            "items": {
+              "description": "An asset type the key is authorized for: an identifier (verification-vocabularies.md section 5). Scope compares values exactly, whether or not the verifier's vocabulary holds them, and no value stands for every asset type (trust-registry-authorization.md section 11).",
+              "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "allowed_workflows": {
+            "items": {
+              "description": "A workflow the key is authorized for: an identifier (verification-vocabularies.md section 5). Scope compares values exactly, whether or not the verifier's vocabulary holds them, and no value stands for every workflow (trust-registry-authorization.md section 11).",
+              "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+          },
+          "effective_from": {
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)Z$",
+            "type": "string"
+          },
+          "expires_at": {
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)Z$",
+            "type": "string"
+          },
+          "issuer_display_name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "issuer_id": {
+            "pattern": "^issuer_[A-Za-z0-9_-]{3,128}$",
+            "type": "string"
+          },
+          "issuer_key_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "key_type": {
+            "description": "Key type identifier. Any well-formed identifier is admitted; the verifier's allowlist decides at the signature step whether the pair of algorithm and key type is supported.",
+            "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
+            "type": "string"
+          },
+          "notes": {
+            "minLength": 1,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "public_key_hex": {
+            "description": "Public key as lowercase hexadecimal, 1 to 512 bytes. Its form for the key type is judged at the signature step: for secp256k1, an uncompressed SEC1 point 04 || X || Y with X and Y below p, on the curve.",
+            "pattern": "^([a-f0-9]{2}){1,512}$",
+            "type": "string"
+          },
+          "revocation_reason": {
+            "minLength": 1,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "revoked_at": {
+            "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)Z$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "active",
+              "suspended",
+              "revoked"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "issuer_id",
+          "issuer_display_name",
+          "issuer_key_id",
+          "key_type",
+          "public_key_hex",
+          "status",
+          "effective_from",
+          "expires_at",
+          "allowed_asset_types",
+          "allowed_workflows"
+        ],
+        "type": "object"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "expires_at": {
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)Z$",
+      "type": "string"
+    },
+    "issued_at": {
+      "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)Z$",
+      "type": "string"
+    },
+    "object_type": {
+      "const": "trust_registry",
+      "type": "string"
+    },
+    "registry_operator_id": {
+      "pattern": "^operator_[A-Za-z0-9_-]{3,128}$",
+      "type": "string"
+    },
+    "registry_version": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-[A-Za-z0-9_.-]+)?$",
+      "type": "string"
+    },
+    "schema_version": {
+      "enum": [
+        "v1"
+      ],
+      "type": "string"
+    },
+    "signature": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": {
+          "description": "Root signature algorithm identifier. Any well-formed identifier is admitted; root authentication decides whether it is supported.",
+          "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
+          "type": "string"
+        },
+        "key_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "signature": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "algorithm",
+        "key_id",
+        "signature"
+      ],
+      "type": "object"
+    },
+    "trust_registry_id": {
+      "pattern": "^tr_[A-Za-z0-9_-]{8,128}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "object_type",
+    "schema_version",
+    "trust_registry_id",
+    "registry_operator_id",
+    "registry_version",
+    "issued_at",
+    "effective_at",
+    "expires_at",
+    "entries",
+    "signature"
+  ],
+  "title": "Loquitur Trust Registry",
+  "type": "object"
+}

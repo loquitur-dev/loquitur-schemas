@@ -1,0 +1,227 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.loquitur.dev/v1/change_summary.schema.json",
+  "title": "Loquitur Change Summary",
+  "type": "object",
+  "required": [
+    "object_type",
+    "schema_version",
+    "bundle_id",
+    "current_bundle_id"
+  ],
+  "properties": {
+    "object_type": {
+      "type": "string",
+      "const": "change_summary"
+    },
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "v2"
+      ]
+    },
+    "bundle_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "asset_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
+      "description": "An asset type: an identifier, a value of the registered vocabulary asset_type (verification-vocabularies.md section 5), or null."
+    },
+    "current_bundle_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "previous_bundle_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "snapshot_seq_current": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "snapshot_seq_previous": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "supersedes_bundle_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "mark_changed": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "mark_delta_k": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "mark_delta_pct": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "verdict_changed": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "verdict_previous": {
+      "description": "Registry verdict, closed to the same four values as registry_entry.verdict. A free string here would let an arbitrary word or a lowercase status spelling validate on the pair a reader uses to see whether the verdict moved.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "PASS",
+        "WARN",
+        "REVIEW",
+        "FAIL",
+        null
+      ]
+    },
+    "verdict_current": {
+      "description": "Registry verdict, closed to the same four values as registry_entry.verdict. See verdict_previous.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "PASS",
+        "WARN",
+        "REVIEW",
+        "FAIL",
+        null
+      ]
+    },
+    "evidence_added": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_removed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evidence_count_delta": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "claims_coverage_delta": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "freshness_changes": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "fields_changed": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "material_change": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "materiality_basis": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    },
+    "materiality_threshold": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false,
+  "example": {
+    "object_type": "change_summary",
+    "bundle_id": "bundle_property_demo_2026_0002",
+    "asset_id": "asset-demo-001",
+    "asset_type": "property",
+    "current_bundle_id": "bundle_property_demo_2026_0002",
+    "previous_bundle_id": "bundle_property_demo_2026_0001",
+    "snapshot_seq_current": 2,
+    "snapshot_seq_previous": 1,
+    "supersedes_bundle_id": "bundle_property_demo_2026_0001",
+    "mark_changed": true,
+    "mark_delta_k": 32.0,
+    "mark_delta_pct": 0.0914,
+    "verdict_changed": false,
+    "verdict_previous": "WARN",
+    "verdict_current": "WARN",
+    "evidence_added": [
+      "occupancy_report"
+    ],
+    "evidence_removed": [],
+    "evidence_count_delta": 1,
+    "claims_coverage_delta": {
+      "supported_delta": 1
+    },
+    "freshness_changes": {
+      "worsened": false
+    },
+    "fields_changed": [
+      "external_mark.value_k"
+    ],
+    "material_change": true,
+    "materiality_basis": {
+      "abs_mark_delta_pct": 0.0914
+    },
+    "materiality_threshold": {
+      "metric": "mark_delta_pct",
+      "threshold": 0.05,
+      "unit": "ratio"
+    },
+    "schema_version": "v2"
+  }
+}

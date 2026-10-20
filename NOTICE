@@ -1,0 +1,14 @@
+loquitur-schemas
+Copyright 2026 Andrea Venè
+
+This product includes software developed by Andrea Venè as part of the
+Loquitur protocol project.
+
+Every file of this repository, the code, the JSON Schemas, the reason-code
+catalog, the registered vocabularies, the tests and the documents among
+them, is licensed under either of
+
+- the Apache License, Version 2.0, in the LICENSE-APACHE file, or
+- the MIT license, in the LICENSE-MIT file,
+
+at your option (SPDX-License-Identifier: MIT OR Apache-2.0).

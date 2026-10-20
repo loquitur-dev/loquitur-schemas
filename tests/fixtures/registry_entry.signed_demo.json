@@ -1,0 +1,33 @@
+{
+  "anchor": null,
+  "anchored_at": null,
+  "asset_type": "fund_nav",
+  "disclosure_profile": "issuer_controlled_bundle",
+  "effective_at": "2026-04-29T00:00:00Z",
+  "issued_at": "2026-04-29T12:00:00Z",
+  "issuer_id": "issuer_synthetic_demo",
+  "issuer_key_id": "demo-key-2",
+  "manifest_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "object_type": "registry_entry",
+  "policy_id": "loquitur.fund_nav.v1",
+  "policy_version": "1.0.0",
+  "privacy_classification": "public_commitment",
+  "reason_code_catalog_version": "loquitur.reason_codes.v1",
+  "reason_codes": [
+    "CONFLICTING_EVIDENCE_DETECTED"
+  ],
+  "receipt_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "receipt_id": "vr_synthetic_demo_0001",
+  "registry_entry_id": "reg_synthetic_demo_0001",
+  "schema_version": "v1",
+  "signature": {
+    "algorithm": "secp256k1_ecdsa_sha256",
+    "key_id": "demo-key-2",
+    "payload_id": "registry_entry_signing_payload_v2",
+    "payload_version": 2,
+    "signature": "c68706f9e3609049e33e45b0ed0b5afe466e9b346c7214e4b098d2b019ac33160987f2b28623253eafcba1e28cc136ee2a1df84674634a4c952e1cb40425ec05"
+  },
+  "subject_ref_hash": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "verdict": "REVIEW",
+  "workflow": "fund_nav_update"
+}

@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.loquitur.dev/v1/lineage_summary.schema.json",
+  "title": "Loquitur Lineage Summary",
+  "type": "object",
+  "required": [
+    "object_type",
+    "schema_version"
+  ],
+  "properties": {
+    "object_type": {
+      "type": "string",
+      "const": "lineage_summary"
+    },
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "v2"
+      ]
+    },
+    "asset_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "asset_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
+      "description": "An asset type: an identifier, a value of the registered vocabulary asset_type (verification-vocabularies.md section 5), or null."
+    },
+    "history_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "latest_bundle_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "latest_snapshot_seq": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "current_bundle_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "current_snapshot_seq": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "previous_bundle_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "previous_snapshot_seq": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "supersedes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "superseded_by": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "latest_for_asset": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "continuity_status": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "effective_date_current": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "effective_date_previous": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "example": {
+    "object_type": "lineage_summary",
+    "asset_id": "asset-demo-001",
+    "asset_type": "property",
+    "history_count": 2,
+    "latest_bundle_id": "bundle_property_demo_2026_0002",
+    "latest_snapshot_seq": 2,
+    "current_bundle_id": "bundle_property_demo_2026_0002",
+    "current_snapshot_seq": 2,
+    "previous_bundle_id": "bundle_property_demo_2026_0001",
+    "previous_snapshot_seq": 1,
+    "supersedes": "bundle_property_demo_2026_0001",
+    "superseded_by": null,
+    "latest_for_asset": true,
+    "continuity_status": "linked",
+    "effective_date_current": "2026-05-15",
+    "effective_date_previous": "2026-04-15",
+    "schema_version": "v2"
+  }
+}

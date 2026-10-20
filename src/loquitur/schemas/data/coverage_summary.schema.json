@@ -1,0 +1,336 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.loquitur.dev/v1/coverage_summary.schema.json",
+  "title": "Loquitur Coverage Summary",
+  "type": "object",
+  "required": [
+    "object_type",
+    "schema_version",
+    "bundle_id",
+    "coverage",
+    "readiness"
+  ],
+  "properties": {
+    "object_type": {
+      "type": "string",
+      "const": "coverage_summary"
+    },
+    "bundle_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z0-9][a-z0-9_]{0,63}$",
+      "description": "An asset type: an identifier, a value of the registered vocabulary asset_type (verification-vocabularies.md section 5), or null."
+    },
+    "coverage_status": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "required_document_classes": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "recommended_document_classes": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "present_document_classes": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "missing_required_document_classes": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "missing_recommended_document_classes": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "stale_document_classes": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "conflicting_document_classes": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "stale_documents": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "conflicting_source_groups": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": [
+        "required_present",
+        "required_total"
+      ],
+      "properties": {
+        "required_present": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "required_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "required_pct": {
+          "type": "number",
+          "minimum": 0
+        },
+        "recommended_present": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recommended_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recommended_pct": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": true
+    },
+    "readiness": {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "publish_ready": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "verify_ready": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "blocking_reasons": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "warnings_detail": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "blockers": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
+        "warnings": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "class_posture": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "type": "object",
+        "properties": {
+          "document_class": {
+            "type": "string"
+          },
+          "required": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "recommended": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "present": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "stale": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "conflicting": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "v2"
+      ]
+    },
+    "document_classes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false,
+  "example": {
+    "object_type": "coverage_summary",
+    "schema_version": "v2",
+    "bundle_id": "bundle_property_demo_2026_0002",
+    "asset_type": "property",
+    "required_document_classes": [
+      "financial_analysis",
+      "occupancy_report"
+    ],
+    "recommended_document_classes": [
+      "valuation_report"
+    ],
+    "present_document_classes": [
+      "financial_analysis",
+      "occupancy_report"
+    ],
+    "missing_required_document_classes": [],
+    "missing_recommended_document_classes": [
+      "valuation_report"
+    ],
+    "stale_document_classes": [
+      "occupancy_report"
+    ],
+    "conflicting_document_classes": [],
+    "stale_documents": [],
+    "conflicting_source_groups": [],
+    "coverage": {
+      "required_present": 2,
+      "required_total": 2,
+      "required_pct": 100.0,
+      "recommended_present": 0,
+      "recommended_total": 1,
+      "recommended_pct": 0.0
+    },
+    "readiness": {
+      "status": "warning",
+      "publish_ready": false,
+      "verify_ready": true,
+      "blocking_reasons": [],
+      "warnings_detail": [],
+      "blockers": [],
+      "warnings": [
+        "Stale document classes: occupancy_report"
+      ]
+    },
+    "class_posture": [
+      {
+        "document_class": "financial_analysis",
+        "required": true,
+        "recommended": false,
+        "present": true,
+        "stale": false,
+        "conflicting": false
+      }
+    ],
+    "coverage_status": "ready",
+    "document_classes": []
+  }
+}

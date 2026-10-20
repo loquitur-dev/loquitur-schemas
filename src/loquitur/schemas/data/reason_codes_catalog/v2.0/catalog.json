@@ -1,0 +1,1069 @@
+{
+  "audiences": [
+    "technical",
+    "compliance",
+    "executive"
+  ],
+  "catalog_version": "2.0.0",
+  "composition_templates": {
+    "compliance": {
+      "common": {
+        "closing": {
+          "FAIL_AUTHORIZATION": "Do not treat this as a defective bundle: the evidence is intact and regenerating it would not change the outcome. The remediation stated against the authorization finding above applies, and depending on that finding it falls to the issuer, to the registry operator, or to your own trust material. Document the outcome in the audit trail.",
+          "FAIL_MULTI": "Reject the bundle. Require the issuer to address every failing condition listed above and resubmit. Document each rejection reason in the audit trail.",
+          "FAIL_SIGNATURE": "Do not treat this as a defective bundle. The bundle's contents verified; what failed is the signature over the registry entry, which is a tampering indicator rather than a formatting fault. Preserve the original bundle and registry entry unaltered, and escalate internally before contacting the counterparty. Obtain re-issued evidence directly from the issuer over a channel you control, as a fresh issuance rather than a correction of this artifact. Document the rejection, the escalation and the preservation step in the audit trail.",
+          "FAIL_SINGLE": "Reject the bundle. Require the issuer to address the failing condition and resubmit. Document the rejection in the audit trail.",
+          "PASS": "Document the offline verification outcome in the audit trail. Continue with policy-layer evaluation (coverage, freshness, conflict, materiality) as required by the workflow.",
+          "REVIEW": "Do not advance the receipt to operational use until the flagged conditions are resolved. Document the review action and outcome in the audit trail before any downstream consumption.",
+          "WARN": "Document the offline verification outcome and the recorded warnings in the audit trail. The warnings do not block policy-layer evaluation, but they must be visible to it and to any downstream reviewer."
+        }
+      },
+      "offline_verification": {
+        "lead": {
+          "FAIL": "The bundle fails offline verification. The receipt cannot be cited as supporting the declared evidence and must not be accepted for listing, settlement, or any downstream operational use.",
+          "PASS": "The bundle passes offline verification. The receipt may be cited as a faithful representation of the evidence the issuer attested to, subject to downstream review at the coverage, freshness, conflict, and materiality layers.",
+          "REVIEW": "The bundle requires review. At least one operational condition blocks PASS at the offline layer and must be resolved before the receipt can be relied upon for downstream decisions.",
+          "WARN": "The bundle passes offline verification with warnings. The receipt may be cited, but at least one non-blocking condition was recorded and must be read and documented before downstream reliance."
+        }
+      },
+      "registry_entry": {
+        "lead": {
+          "FAIL": "The registry entry records a FAIL verdict. The receipt cannot be cited as supporting the declared evidence and must not be accepted for listing, settlement, or any downstream operational use.",
+          "PASS": "The registry entry is a public commitment that the underlying bundle passes offline verification. The receipt may be cited as a faithful representation of the evidence the issuer attested to, subject to downstream review at the coverage, freshness, conflict, and materiality layers.",
+          "REVIEW": "The registry entry records a REVIEW verdict. At least one operational condition was not confirmed at issuance time and must be resolved before the receipt can be relied upon for downstream decisions.",
+          "WARN": "The registry entry records a WARN verdict. The underlying bundle passed offline verification and at least one non-blocking condition was recorded at issuance time, which must be read and documented before downstream reliance."
+        }
+      }
+    },
+    "executive": {
+      "common": {
+        "closing": {
+          "FAIL_AUTHORIZATION": "What must be resolved is the signer's authority, not the record itself.",
+          "FAIL_MULTI": "The issuer must produce a corrected version addressing each flagged condition.",
+          "FAIL_SIGNATURE": "Preserve this record as received; it should not be replaced by a corrected copy.",
+          "FAIL_SINGLE": "The issuer must produce a corrected version.",
+          "PASS": "",
+          "REVIEW": "The issuer must resolve the flagged conditions before the record is used.",
+          "WARN": "The recorded warnings do not prevent the record from being used, but they should be read alongside it."
+        }
+      },
+      "offline_verification": {
+        "lead": {
+          "FAIL": "The verification record is rejected and cannot be relied upon.",
+          "PASS": "The verification record is valid and may be relied upon for the layers it covers.",
+          "REVIEW": "The verification record requires review before it can be relied upon.",
+          "WARN": "The verification record is valid and may be relied upon, with recorded warnings that should be read alongside it."
+        }
+      },
+      "registry_entry": {
+        "lead": {
+          "FAIL": "The public registry entry records a rejected verification.",
+          "PASS": "The public registry entry confirms a valid verification record.",
+          "REVIEW": "The public registry entry records a verification that requires review.",
+          "WARN": "The public registry entry confirms a valid verification record that carries recorded warnings."
+        }
+      }
+    },
+    "technical": {
+      "common": {
+        "closing": {
+          "FAIL_AUTHORIZATION": "The bundle is internally consistent: manifest, P1, envelope and canonical-input replay all verified. The rejection is at the authorization layer. Act on the specific authorization finding above rather than on the aggregate verdict.",
+          "FAIL_MULTI": "Resolve the flagged failures (in canonical order: integrity → coverage → freshness → conflict → policy) and regenerate the bundle before re-verification.",
+          "FAIL_SIGNATURE": "The bundle's own contents verified; what failed is the signature over the registry entry. Preserve the artifacts as received before requesting anything from the issuer.",
+          "FAIL_SINGLE": "Resolve the flagged failure and regenerate the bundle before re-verification.",
+          "PASS": "No further integrity action is required at the offline layer. Coverage, freshness, conflict, and materiality remain to be evaluated by the policy engine where applicable.",
+          "REVIEW": "The bundle is not rejected but cannot be confirmed PASS at the offline layer until the flagged checks are resolved or completed.",
+          "WARN": "No further integrity action is required at the offline layer. The recorded warnings identify conditions that did not block the verdict and remain visible in the report."
+        }
+      },
+      "offline_verification": {
+        "lead": {
+          "FAIL": "Offline verification produced a FAIL verdict. At least one deterministic check rejected the bundle.",
+          "PASS": "Offline verification produced a PASS verdict. The bundle's manifest, P1 receipt, and envelope hashes recompute deterministically to their declared values.",
+          "REVIEW": "Offline verification produced a REVIEW verdict. The bundle is structurally well-formed but at least one check did not complete with confirmation.",
+          "WARN": "Offline verification produced a WARN verdict. Every deterministic check completed; at least one recorded a non-blocking condition."
+        }
+      },
+      "registry_entry": {
+        "lead": {
+          "FAIL": "The registry entry records a FAIL verdict. The receipt records that the underlying bundle did not pass verification at issuance time.",
+          "PASS": "The registry entry records a PASS verdict against the issuer's policy at the time of issuance. The receipt is a public commitment that the corresponding bundle passed offline verification.",
+          "REVIEW": "The registry entry records a REVIEW verdict. The receipt acknowledges that at least one verification condition was not confirmed at issuance time.",
+          "WARN": "The registry entry records a WARN verdict. The receipt is a public commitment that the corresponding bundle passed offline verification with at least one non-blocking condition recorded."
+        }
+      }
+    }
+  },
+  "entries": {
+    "AUTHORIZATION_ISSUER_KEY_EXPIRED": {
+      "category": "authorization",
+      "code": "AUTHORIZATION_ISSUER_KEY_EXPIRED",
+      "compliance": {
+        "consequence": "The bundle has not been altered and the issuer is known to the registry. The key's authorization period had ended by the date the verification was evaluated at. Without an attested signing time this does not show that the record was signed after the key expired; it is normally a lapsed credential or an unrenewed registry entry rather than a security event.",
+        "headline": "The evidence is intact, but the signing key's authorization had lapsed by the evaluation date.",
+        "required_action": "Determine when the record was signed and whether the key was authorized then. If the issuer continued signing after its key expired, other records you hold from the same period carry the same defect and must be re-examined. Otherwise require re-issued evidence under a currently authorized key."
+      },
+      "executive": {
+        "summary": "The record is undamaged, but the signer's credential had lapsed by the date the check was made. This is usually an expired authorisation, not a sign of wrongdoing."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "Bundle integrity verified and the registry entry is well formed. The trust registry authorizes this key until its expires_at instant, and the operator's evaluation time falls after it. The key is neither revoked nor suspended: its authorization had lapsed by the evaluation time. Version 0.1 has no attested signing time, so this does not show that the key had expired when the entry was signed, and the dates the issuer writes into the entry do not decide it. Note the check order: revocation and suspension are evaluated first, because they are assertions the registry makes about the key that remain true even after the registry itself has gone stale. The registry's own validity window is evaluated next, before the key's, because a stale registry's judgement about a key's expiry is not reliable evidence. So a registry outside its window reports itself and this status is not reached.",
+        "headline": "The issuing key had already expired at the evaluation time."
+      }
+    },
+    "AUTHORIZATION_ISSUER_KEY_NOT_YET_EFFECTIVE": {
+      "category": "authorization",
+      "code": "AUTHORIZATION_ISSUER_KEY_NOT_YET_EFFECTIVE",
+      "compliance": {
+        "consequence": "The bundle has not been altered and the issuer is known to the registry. The date the verification was evaluated at precedes the start of the key's authorization period. Until the evaluation date and the trust material are confirmed to fit the question being asked, nothing about the issuer's authority follows.",
+        "headline": "The evidence is intact, but the signer held no authority yet at the evaluation date.",
+        "required_action": "Ensure the evaluation date and the trust registry copy used fit the question being asked. If both do, determine when the record was signed, and do not accept a re-dated record from the issuer without independent support."
+      },
+      "executive": {
+        "summary": "The record is undamaged, but at the date the check was made the signer was not yet allowed to sign. The date used, or the reference list, needs explaining."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "Bundle integrity verified and the registry entry is well formed. The operator's evaluation time precedes the key's effective_from, so at that time the signer held no authority under the supplied trust registry. Version 0.1 has no attested signing time, so the dates the issuer writes into the entry do not decide this. This is the opposite direction from an expired key: an evaluation time before the key's authority began usually means that the evaluation time or the trust registry copy does not fit the question being asked, and it needs explaining before the record is relied on.",
+        "headline": "The issuing key had not yet come into force at the evaluation time."
+      }
+    },
+    "AUTHORIZATION_ISSUER_KEY_REVOKED": {
+      "category": "authorization",
+      "code": "AUTHORIZATION_ISSUER_KEY_REVOKED",
+      "compliance": {
+        "consequence": "The bundle is internally consistent and has not been altered. What failed is authority: the trust registry withdrew this signing key, which is the action taken when a key is believed to be compromised. Records signed by a revoked key carry no assurance about who produced them, regardless of how well formed they are.",
+        "headline": "The evidence is intact, but the key that signed it has been revoked.",
+        "required_action": "Investigate why the key was revoked before treating this as a routine rejection. Do not request a regenerated bundle from the same key. Obtain re-issued evidence under a currently authorized key and record the revocation event in the audit trail."
+      },
+      "executive": {
+        "summary": "The record itself is undamaged, but the credential used to sign it has been withdrawn — typically because it was compromised. This needs investigation, not a resubmission."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "Bundle integrity verified: manifest, P1, envelope and canonical-input replay all matched. The registry entry's signature is well formed. Authorization failed because the trust registry marks the issuer key as revoked, which holds at every evaluation time and when none is supplied. Revocation is the containment control applied after a key is believed compromised. Note the check order: revocation is evaluated before the trust registry's own validity window, so a stale registry does not mask it. A revocation does not un-happen, and the registry remains credible about it even once its window has lapsed. Suspension cannot mask it either: status is a single value, so an entry is suspended or revoked, never both.",
+        "headline": "The issuing key was revoked in the trust registry."
+      }
+    },
+    "AUTHORIZATION_ISSUER_KEY_SUSPENDED": {
+      "category": "authorization",
+      "code": "AUTHORIZATION_ISSUER_KEY_SUSPENDED",
+      "compliance": {
+        "consequence": "The bundle has not been altered. The registry records the issuer's key as suspended, which is a reversible state rather than a withdrawal of trust. The registry does not say why, so the hold may be administrative or precautionary. The record cannot be relied upon while it is in force.",
+        "headline": "The evidence is intact, but the signing key is currently on hold.",
+        "required_action": "Determine with the registry operator why the key is suspended and whether reinstatement is expected. Hold the transaction rather than rejecting the issuer outright, and re-verify once the hold is lifted."
+      },
+      "executive": {
+        "summary": "The record is undamaged, but the signer's credential is temporarily on hold. This is usually an administrative pause, not a sign of tampering."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "Bundle integrity verified and the registry entry is well formed. The trust registry records the issuer key status as suspended, which holds at every evaluation time and when none is supplied. The verifier observed that status and nothing more: suspension is defined as a reversible hold rather than a withdrawal, but the registry carries no reason, so this outcome is by itself evidence neither of compromise nor of its absence.",
+        "headline": "The issuing key is suspended in the trust registry."
+      }
+    },
+    "AUTHORIZATION_ISSUER_NOT_RECOGNISED": {
+      "category": "authorization",
+      "code": "AUTHORIZATION_ISSUER_NOT_RECOGNISED",
+      "compliance": {
+        "consequence": "The bundle has not been altered. The party that signed it does not appear in the trust registry supplied to the verifier. Either the wrong trust material was used, or this counterparty was never authorized to issue this evidence.",
+        "headline": "The evidence is intact, but the signer is not listed in the trust material.",
+        "required_action": "Determine whether the correct trust registry was supplied before treating this as an unauthorized issuer. Confirm the counterparty's expected issuer identity out of band, and reject the record if it remains unlisted."
+      },
+      "executive": {
+        "summary": "The record is undamaged, but whoever signed it does not appear on the approved list being used. Either the wrong list was applied, or this party was never approved to issue it."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "Bundle integrity verified and the registry entry is well formed. The issuer identifier, or the specific key identifier it names, has no entry in the supplied trust registry. The verifier draws no conclusion about the issuer's legitimacy: an unknown issuer and an untrusted issuer are indistinguishable from a registry that does not list it.",
+        "headline": "The issuer or issuing key is absent from the trust registry."
+      }
+    },
+    "AUTHORIZATION_SCOPE_MISMATCH": {
+      "category": "authorization",
+      "code": "AUTHORIZATION_SCOPE_MISMATCH",
+      "compliance": {
+        "consequence": "The bundle has not been altered and the issuer holds a valid, active key. The record names an asset type or workflow outside the set the trust registry authorizes for this key. The verifier records the mismatch; it does not establish which side is wrong.",
+        "headline": "The evidence is intact and the signer is authorized by the supplied trust registry, but not for this kind of asset.",
+        "required_action": "Determine whether the record was misclassified by the issuer, whether your own classification of it is wrong, or whether the registry's scope entry for this issuer is stale. Require either a corrected record or an explicit scope extension from the registry operator, and do not accept the record on the strength of the key alone."
+      },
+      "executive": {
+        "summary": "The record is undamaged and the signer is authorized by the supplied trust registry, but not for this type of asset. Either the record is filed under the wrong type or the signer's remit is out of date."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "Bundle integrity verified, the registry entry is well formed, and the issuer key is active and within its validity window. The trust registry constrains this key to a declared set of asset types and workflows, and the entry names one outside that set. Authority is scoped, so holding a valid key is not sufficient.",
+        "headline": "The issuing key is authorized, but not for this asset type or workflow."
+      }
+    },
+    "AUTHORIZATION_SIGNATURE_NOT_VERIFIED": {
+      "category": "authorization",
+      "code": "AUTHORIZATION_SIGNATURE_NOT_VERIFIED",
+      "compliance": {
+        "consequence": "The surrounding bundle matches its declared digests, so this is not a transport error. The signed statement itself does not verify against the key the trust registry authorizes: either its contents changed after it was signed, or it was signed by a key other than the one it claims.",
+        "headline": "The bundle is consistent, but the registry entry's signature does not verify.",
+        "required_action": "Reject the record and treat the discrepancy as potential tampering rather than a formatting fault. Require re-issued evidence directly from the issuer over a channel you control, and preserve the original for investigation."
+      },
+      "executive": {
+        "summary": "The package is internally consistent, but the signature on the record does not match the approved signer. Treat this as possible tampering and preserve it."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "Bundle-level integrity verified: the manifest, P1 and envelope digests matched. The registry entry's own signature failed verification against the public key the trust registry authorizes. This covers a missing signature, a signature that does not verify, and an entry naming a key other than the authorized one. The entry was altered after signing, or it was signed by a different key.",
+        "headline": "The registry entry signature did not verify against the authorized key."
+      }
+    },
+    "AUTHORIZATION_SIGNING_METHOD_UNSUPPORTED": {
+      "category": "authorization",
+      "code": "AUTHORIZATION_SIGNING_METHOD_UNSUPPORTED",
+      "compliance": {
+        "consequence": "The bundle has not been altered. The cryptographic method used to sign it, or declared for the issuer's key, is not one this verifier accepts. No conclusion about authorship follows, and the refusal is deliberate: interpreting an unrecognised signing method is how signature confusion is exploited.",
+        "headline": "The evidence is intact, but it was signed by a method outside the accepted profile.",
+        "required_action": "Determine whether the issuer or the verifier is out of date with the agreed cryptographic profile. Require the issuer to sign under an accepted method, and do not disable the profile check to accept the record."
+      },
+      "executive": {
+        "summary": "The record is undamaged, but it was signed using a method outside the agreed standard. One side's software is out of step and must be brought into line."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "Bundle integrity verified and the entry is well formed. The signing algorithm, the issuer key type declared by the trust registry, or the signing payload version falls outside the accepted cryptographic capability profile. The verifier refuses rather than attempting a best-effort interpretation, because accepting an unrecognised method is how algorithm-confusion attacks succeed.",
+        "headline": "The registry entry was signed by a method this verifier does not accept."
+      }
+    },
+    "AUTHORIZATION_TRUST_MATERIAL_OUTSIDE_VALIDITY_WINDOW": {
+      "category": "authorization",
+      "code": "AUTHORIZATION_TRUST_MATERIAL_OUTSIDE_VALIDITY_WINDOW",
+      "compliance": {
+        "consequence": "The bundle has not been altered. The copy of the trust registry supplied to the verifier is stale or premature for the date being evaluated, so no conclusion about the issuer's authority follows from it. This is a defect in the verifier's inputs, not in the issuer's evidence.",
+        "headline": "The evidence is intact, but the trust material used to check it does not cover this date.",
+        "required_action": "Ensure the verifier holds trust material covering the evaluation date and re-run the verification before drawing any conclusion about the issuer. Escalate to whoever distributes the trust registry if current material is unavailable."
+      },
+      "executive": {
+        "summary": "The record is undamaged. The reference list used to check who signed it is out of date for this period, so no judgement about the signer can be made yet."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "Bundle integrity verified and the registry entry is well formed. The failure is at the registry level rather than the key level: the supplied trust registry declares its own effective and expiry instants, and the operator's evaluation time falls outside them. The verifier does draw one class of conclusion from material outside its window: revocation and suspension are reported before this check, because those assertions do not lapse with the document carrying them. Everything time-relative - the key's own effective and expiry instants, and scope - is not evaluated, and this status is what the reader receives instead.",
+        "headline": "The trust registry itself was outside its validity window."
+      }
+    },
+    "AUTHORIZATION_TRUST_REGISTRY_AMBIGUOUS_KEY": {
+      "category": "authorization",
+      "code": "AUTHORIZATION_TRUST_REGISTRY_AMBIGUOUS_KEY",
+      "compliance": {
+        "consequence": "The bundle has not been altered. The trust registry lists the same signing key twice, under one label or under two, so it states no single answer about that key's authority. A verifier that picked one entry would produce a verdict determined by ordering or by labels rather than by policy, which is why the record is refused instead.",
+        "headline": "The evidence is intact, but the trust material contradicts itself about this key.",
+        "required_action": "Require the registry operator to correct the trust material at source: the defect is in the registry, not in the evidence. Do not resolve the duplicate locally, and re-verify only once a corrected registry is distributed."
+      },
+      "executive": {
+        "summary": "The record is undamaged, but the approved-signer list contradicts itself about this signer. The list must be corrected by whoever publishes it."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "Bundle integrity verified and the registry entry is well formed. The supplied trust registry contains more than one entry for the same issuer and key identifier, or the entry found carries the same public key, in any encoding, as another entry of the registry, so the authority for that key is not determined by the registry. The verifier refuses rather than selecting one, because selecting by position or by label would let a revoked entry be shadowed by an active entry for the same key.",
+        "headline": "The trust registry lists the same issuer key more than once."
+      }
+    },
+    "AUTHORIZATION_VERIFIED": {
+      "category": "authorization",
+      "code": "AUTHORIZATION_VERIFIED",
+      "compliance": {
+        "consequence": "The key that signed this record is listed, active, within its authorization window, and permitted for this asset type and workflow. Both conditions for reliance hold: the evidence is intact, and the party that attested to it held authority to do so. This is not a judgement on the underlying valuation, and it rests on the trust material supplied to the verifier.",
+        "headline": "The issuer's authority verified against the supplied trust material.",
+        "required_action": "Document both the integrity and the authorization outcome in the audit trail, and confirm the trust material used was current for the evaluation date. Continue with policy-layer evaluation as required by the workflow."
+      },
+      "executive": {
+        "summary": "The record is intact and the party that signed it was authorised to do so on that date. Both checks passed."
+      },
+      "severity": "info",
+      "technical": {
+        "detail": "The key named by the registry entry is listed in the supplied trust registry, carries active status, falls within both the registry's and its own validity window at the operator's evaluation time, and is authorized for the entry's asset type and workflow. This is authorization against the supplied trust material only: the trust registry's own root signature is not verified, so that material is trusted as given.",
+        "headline": "The issuing key was authorized by the trust registry at the evaluation time."
+      }
+    },
+    "BUNDLE_EXTRA_FILES": {
+      "category": "integrity",
+      "code": "BUNDLE_EXTRA_FILES",
+      "compliance": {
+        "consequence": "The receipt's scope covers only declared files; the undeclared files are outside the commitment. They may or may not be material; the protocol does not assume either. Compliance review should determine whether the undeclared files require disclosure or removal.",
+        "headline": "Undeclared files are present, and the issuer's policy treats them as a warning.",
+        "required_action": "Review the undeclared files. Either accept the bundle with documented scope or require the issuer to regenerate with a complete manifest."
+      },
+      "executive": {
+        "summary": "This record contains additional files outside its declared scope. The verification proceeds, but the scope of the record should be reviewed."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "Files are present in the bundle that are not declared in manifest.json. The issuer's policy reports them as a warning rather than a failure. The undeclared files are not within the receipt's commitment scope, and a verifier reports each of them as an undeclared member.",
+        "headline": "Bundle contains undeclared files, reported as a warning."
+      }
+    },
+    "COMPLETENESS_OFFLINE_CHECKS_SKIPPED": {
+      "category": "offline",
+      "code": "COMPLETENESS_OFFLINE_CHECKS_SKIPPED",
+      "compliance": {
+        "consequence": "Some replay checks could not be performed. The remaining checks that did run may have passed, but the full integrity guarantee is not in force.",
+        "headline": "The offline verification is incomplete.",
+        "required_action": "Determine which check was skipped and whether the missing input is by design or by omission. If by omission, require the issuer to complete the bundle."
+      },
+      "executive": {
+        "summary": "Not all parts of this record could be verified independently. The completeness of the verification is reduced."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The offline verifier reports that at least one check was not performed because its required input was absent. Examples: canonical_input.json missing means input-hash check skipped; envelope absent means envelope check skipped. The check did not fail; it did not run.",
+        "headline": "One or more offline checks were skipped due to missing material."
+      }
+    },
+    "COMPLETENESS_OFFLINE_MATERIAL_MISSING": {
+      "category": "offline",
+      "code": "COMPLETENESS_OFFLINE_MATERIAL_MISSING",
+      "compliance": {
+        "consequence": "The strongest replay guarantee (full offline reproduction of the verification event) cannot be performed. Partial verification may still hold, but the bundle does not meet the high-bar offline standard.",
+        "headline": "Bundle is incomplete for full offline replay.",
+        "required_action": "Require the issuer to attach the missing material and resubmit if full offline replay is required for the use case."
+      },
+      "executive": {
+        "summary": "This record cannot be fully verified on a disconnected machine. Some pieces are missing."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The bundle is missing material that the offline verifier needs to perform a complete replay (typically canonical_input.json, p1.json, or envelope). The verifier proceeds with partial coverage and emits this code so the gap is explicit in the verdict.",
+        "headline": "Material required for full offline verification is missing."
+      }
+    },
+    "COMPLETENESS_OFFLINE_MISSING_CANONICAL_INPUT": {
+      "category": "offline",
+      "code": "COMPLETENESS_OFFLINE_MISSING_CANONICAL_INPUT",
+      "compliance": {
+        "consequence": "The input that drove the receipt is not present in the bundle. Receipt-to-input replay cannot be performed.",
+        "headline": "The bundle's canonical input is missing.",
+        "required_action": "Require the issuer to attach canonical_input.json and resubmit."
+      },
+      "executive": {
+        "summary": "The data that produced this verification record is not included in the bundle."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The canonical input file is absent. Without it the verifier cannot recompute the input hash or replay the policy evaluation. The verdict drops to REVIEW; presence of canonical_input is required for a full offline replay.",
+        "headline": "canonical_input.json is missing from the bundle."
+      }
+    },
+    "COMPLETENESS_OFFLINE_MISSING_MANIFEST": {
+      "category": "offline",
+      "code": "COMPLETENESS_OFFLINE_MISSING_MANIFEST",
+      "compliance": {
+        "consequence": "Without a manifest the bundle has no declared inventory and cannot be verified against any commitment. The bundle is not well-formed.",
+        "headline": "The bundle's manifest is missing.",
+        "required_action": "Require the issuer to attach manifest.json and resubmit. Do not treat the bundle as a complete verification record until the manifest is provided."
+      },
+      "executive": {
+        "summary": "This record is missing its inventory of supporting documents. The issuer must provide the manifest before the record can be relied upon."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The manifest is absent. Without it no declared file can be enumerated and no per-file hash confirmed, so the bundle is not well-formed. A verifier given such a bundle fails its manifest check; the record cannot be relied upon until the issuer provides the manifest.",
+        "headline": "manifest.json is missing from the bundle."
+      }
+    },
+    "CONFLICTING_EVIDENCE_DETECTED": {
+      "category": "conflict",
+      "code": "CONFLICTING_EVIDENCE_DETECTED",
+      "compliance": {
+        "consequence": "Two or more documents disagree on a material claim. The protocol does not adjudicate which value is correct; it records the conflict and refuses to issue PASS. Acting on a receipt with unresolved conflicts means picking one of the conflicting values without a documented basis, which is not defensible in audit.",
+        "headline": "The bundle contains internally contradictory evidence.",
+        "required_action": "Require the issuer to resolve the conflict: identify which document is current, withdraw the stale one, or attach an explicit reconciliation note. Then regenerate the bundle and resubmit."
+      },
+      "executive": {
+        "summary": "Documents in this record contradict each other on a key value. The issuer must resolve the contradiction before the record can be relied upon."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The conflict detector identified at least one claim for which two source documents in this bundle declare different values for the same asset on the same effective date. The conflict is recorded with evidence pointers to both documents. The verdict drops to REVIEW; conflicts must be explicitly resolved before PASS.",
+        "headline": "Two or more documents declare conflicting values for the same claim."
+      }
+    },
+    "FRESHNESS_OK": {
+      "category": "freshness",
+      "code": "FRESHNESS_OK",
+      "compliance": {
+        "consequence": "No evidence in this bundle is stale relative to policy. The receipt reflects current information at the time of issuance.",
+        "headline": "Evidence is current relative to the snapshot effective date.",
+        "required_action": "No action required at the freshness layer."
+      },
+      "executive": {
+        "summary": "All supporting documents in this record are current. No staleness concerns."
+      },
+      "severity": "info",
+      "technical": {
+        "detail": "Each evidence document's effective date falls within the configured freshness threshold for its document_class. For property appraisals this is typically 90 days; for monthly NAV statements 30 days; thresholds are set per asset type in the policy pack.",
+        "headline": "All evidence is within the policy freshness window."
+      }
+    },
+    "FRESHNESS_P1_TIMESTAMP_OOW": {
+      "category": "freshness",
+      "code": "FRESHNESS_P1_TIMESTAMP_OOW",
+      "compliance": {
+        "consequence": "A receipt should be issued contemporaneously with or shortly after the snapshot it describes. A timestamp far outside that window suggests the receipt was issued retroactively or incorrectly dated. Either way the temporal binding is broken.",
+        "headline": "The receipt's issuance timestamp does not match the period it attests to.",
+        "required_action": "Require the issuer to clarify the timestamp anomaly or reissue the receipt with a corrected timestamp."
+      },
+      "executive": {
+        "summary": "This record was issued at a time inconsistent with the period it covers. The timestamp anomaly must be resolved by the issuer."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "The P1 receipt's issuance timestamp (p1.timestamp) is outside the policy-configured validity window relative to the snapshot effective date. Receipts are time-bound; a receipt issued well before or after the period it claims to attest to is not credible.",
+        "headline": "P1 receipt timestamp is outside the policy validity window."
+      }
+    },
+    "FRESHNESS_WARNING": {
+      "category": "freshness",
+      "code": "FRESHNESS_WARNING",
+      "compliance": {
+        "consequence": "The bundle is acceptable now but a future verification cycle on the same evidence will likely fall outside the freshness window. Plan to refresh evidence before the next reporting period.",
+        "headline": "Evidence is current but approaching staleness.",
+        "required_action": "Schedule a refresh of the flagged evidence within the next reporting cycle. No immediate action required."
+      },
+      "executive": {
+        "summary": "Some supporting documents are current but aging. The issuer should refresh them before the next reporting period."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "At least one evidence document's age is within the warning band of the freshness threshold (typically the second-to-last quartile before staleness). The verdict is not affected, but the bundle should be regenerated soon with refreshed evidence to avoid future stale-evidence rejections.",
+        "headline": "Evidence is approaching the freshness threshold."
+      }
+    },
+    "INTEGRITY_CHECK_FAILED": {
+      "category": "integrity",
+      "code": "INTEGRITY_CHECK_FAILED",
+      "compliance": {
+        "consequence": "The cryptographic chain between receipt and evidence is broken. The issuer cannot prove that the evidence in this bundle is the evidence the receipt was originally issued against. Do not accept this bundle as authoritative for listing, settlement, or downstream valuation use.",
+        "headline": "The receipt cannot be cited as supporting the declared evidence.",
+        "required_action": "Require the issuer to regenerate the bundle from current source evidence and reissue the receipt. Do not attempt to repair the existing bundle in place."
+      },
+      "executive": {
+        "summary": "This verification record cannot be trusted in its current form. The issuer must produce a corrected version before any downstream use."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "At least one structural integrity check (manifest hash, P1 hash, envelope hash, or canonical input hash) did not match its declared value. The bundle cannot be replayed deterministically against its declared receipt. Inspect the per-check sub-results to identify which layer failed; common causes are post-bundling document modification, corrupted ZIP transport, or a bug in the bundle generation pipeline.",
+        "headline": "One or more integrity checks failed."
+      }
+    },
+    "INTEGRITY_OFFLINE_CANONICALIZATION_FAILED": {
+      "category": "integrity",
+      "code": "INTEGRITY_OFFLINE_CANONICALIZATION_FAILED",
+      "compliance": {
+        "consequence": "The protocol cannot reproduce the input that generated this receipt. Determinism is the foundation of every other verification claim; without it, no downstream audit, no policy reapplication, and no regulator independent replay are possible.",
+        "headline": "The canonical input cannot be reproduced and the receipt cannot be replayed.",
+        "required_action": "Require the issuer to inspect the bundle generation pipeline for canonicalization-incompatible values and regenerate the bundle. Do not accept any partial verification outcome from this bundle."
+      },
+      "executive": {
+        "summary": "The data inside this verification record is not in a form that can be replayed independently. The record must be regenerated by the issuer."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "The canonical_input.json file in the bundle could not be canonicalized under RFC 8785 (JCS). Common causes: the file contains non-JSON content, contains values that are not deterministically representable (NaN, Infinity, non-string object keys), or is malformed. A bundle whose canonical input cannot be canonicalized cannot have a stable input hash and therefore cannot be replayed.",
+        "headline": "Canonical input could not be canonicalized deterministically."
+      }
+    },
+    "INTEGRITY_OFFLINE_ENVELOPE_LINKS_MISMATCH": {
+      "category": "integrity",
+      "code": "INTEGRITY_OFFLINE_ENVELOPE_LINKS_MISMATCH",
+      "compliance": {
+        "consequence": "The bundle is internally inconsistent: the envelope claims to wrap one set of contents, the actual contents are a different set. A receipt cited from this bundle has no defensible cryptographic support.",
+        "headline": "The envelope no longer corresponds to its inner receipt and evidence.",
+        "required_action": "Reject the bundle. Require the issuer to regenerate the entire bundle from clean source state. Do not attempt partial repair."
+      },
+      "executive": {
+        "summary": "The wrapper and contents of this record do not match each other. The record is internally broken and is rejected."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "The envelope (env1) declares the SHA-256 of its inner P1 receipt and supporting artifacts. At least one of these inner-link hashes does not match the recomputed value. The envelope and its inner contents have drifted relative to each other; the envelope is no longer a faithful wrapper of the current bundle contents.",
+        "headline": "Envelope-declared inner hashes do not match recomputed hashes."
+      }
+    },
+    "INTEGRITY_OFFLINE_ENVELOPE_SHA_MISMATCH": {
+      "category": "integrity",
+      "code": "INTEGRITY_OFFLINE_ENVELOPE_SHA_MISMATCH",
+      "compliance": {
+        "consequence": "The envelope binds the receipt to the issuer signature and to the bundle context. A modified envelope means the issuer attestation cannot be tied to the current receipt content with cryptographic certainty.",
+        "headline": "The receipt's outer envelope has been altered.",
+        "required_action": "Reject the bundle. Require the issuer to regenerate the envelope and reissue the receipt and signature together."
+      },
+      "executive": {
+        "summary": "The outer wrapper of this record has been altered. The issuer's signature can no longer be reliably tied to the content. The record is rejected."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "The recomputed SHA-256 of the envelope wrapping the P1 receipt does not match the envelope_sha256 declared in the manifest or sidecar. The envelope has been modified after issuance, or the manifest reference is stale. The receipt's outer wrapper cannot be trusted as authentic.",
+        "headline": "Envelope (env1) hash does not match its declared value."
+      }
+    },
+    "INTEGRITY_OFFLINE_EXTRA_FILES_STRICT": {
+      "category": "integrity",
+      "code": "INTEGRITY_OFFLINE_EXTRA_FILES_STRICT",
+      "compliance": {
+        "consequence": "Files outside the declared inventory may carry information the receipt does not commit to. Whether the extra files are benign or material cannot be determined automatically; an issuer's policy that cites this code refuses to assume they are benign.",
+        "headline": "Undeclared files are present in the bundle and the receipt scope cannot be confirmed.",
+        "required_action": "Reject the bundle. Require the issuer to either declare all files in the manifest or remove undeclared files, then regenerate the receipt."
+      },
+      "executive": {
+        "summary": "This record contains supporting files that were not declared when the record was created. The scope of the record is unclear and it is rejected."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "The bundle contains files that are present on disk but not declared in manifest.json, and the issuer's policy treats any undeclared file as an integrity failure: under that policy the manifest must be a complete and exhaustive inventory of the bundle's contents.",
+        "headline": "Bundle contains files not declared in the manifest, under a policy that refuses them."
+      }
+    },
+    "INTEGRITY_OFFLINE_FAIL": {
+      "category": "integrity",
+      "code": "INTEGRITY_OFFLINE_FAIL",
+      "compliance": {
+        "consequence": "An air-gapped, server-independent verifier cannot confirm that this bundle is internally consistent. The protocol's strongest replay guarantee (no online dependency, no trust in any server) does not hold for this bundle.",
+        "headline": "The bundle fails offline verification and must not be relied upon.",
+        "required_action": "Treat this bundle as invalid. Require the issuer to regenerate and resubmit. Document the rejection in the audit trail."
+      },
+      "executive": {
+        "summary": "An independent verification on a disconnected machine could not confirm this record is genuine. The bundle is rejected."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "The standalone offline verifier rejected the bundle at the integrity layer. This is the aggregate failure outcome covering manifest, P1, envelope, and canonical-input replay. Specific sub-codes (INTEGRITY_OFFLINE_*) carry the exact failing layer and should be inspected to determine the precise cause.",
+        "headline": "Offline integrity verification failed."
+      }
+    },
+    "INTEGRITY_OFFLINE_INPUT_HASH_MISMATCH": {
+      "category": "integrity",
+      "code": "INTEGRITY_OFFLINE_INPUT_HASH_MISMATCH",
+      "compliance": {
+        "consequence": "The receipt does not describe the input file present in this bundle. Treating the receipt as authoritative for this input would be a misstatement: the receipt was generated for a different input and cannot be cited here.",
+        "headline": "The receipt is not paired with the canonical input it was issued against.",
+        "required_action": "Reject the bundle. Require the issuer to re-pair the correct receipt with the correct canonical input, or to regenerate both, and resubmit."
+      },
+      "executive": {
+        "summary": "The supporting data in this record does not correspond to the receipt. The two were combined incorrectly. The record is rejected."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "The SHA-256 of the canonicalized canonical_input.json does not match the input_hash declared inside p1.json. Either canonical_input.json was modified after the receipt was issued, or the wrong canonical_input.json is paired with this p1.json. The two are not from the same verification event.",
+        "headline": "Canonical input hash does not match the P1 input hash."
+      }
+    },
+    "INTEGRITY_OFFLINE_MANIFEST_FILE_MISMATCH": {
+      "category": "integrity",
+      "code": "INTEGRITY_OFFLINE_MANIFEST_FILE_MISMATCH",
+      "compliance": {
+        "consequence": "The evidence file that the receipt commits to has been replaced or altered. Whatever the receipt claims about that evidence (extracted claims, freshness, conflict status) no longer corresponds to the current file. The bundle must not be cited as evidence of anything beyond the fact of tampering.",
+        "headline": "Supporting evidence has been modified after the receipt was issued.",
+        "required_action": "Reject the bundle. Require the issuer to identify which file changed, restore the original or regenerate the bundle from clean source, and reissue the receipt."
+      },
+      "executive": {
+        "summary": "One or more supporting documents in this record have been altered since the record was created. The record is rejected."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "A file declared in manifest.json has a recomputed SHA-256 that differs from the value in the manifest. The file has been replaced, edited, or re-exported after the manifest was produced. The check covers all files listed in the manifest; the per-file diff identifies the specific failing entries.",
+        "headline": "At least one manifest-declared file hash does not match."
+      }
+    },
+    "INTEGRITY_OFFLINE_MANIFEST_SHA_MISMATCH": {
+      "category": "integrity",
+      "code": "INTEGRITY_OFFLINE_MANIFEST_SHA_MISMATCH",
+      "compliance": {
+        "consequence": "The manifest is the document inventory that the receipt commits to. A modified manifest means the bundle no longer describes the evidence set the receipt was issued for. Subsequent file hash checks become meaningless because they reference an altered baseline.",
+        "headline": "The bundle's index of files has been modified after the receipt was issued.",
+        "required_action": "Reject the bundle. Require the issuer to regenerate manifest, sidecar hash, and receipt together from a clean source state."
+      },
+      "executive": {
+        "summary": "The list of supporting documents in this record has been altered after the record was created. The record is rejected."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "The recomputed SHA-256 of manifest.json does not match the value stored in manifest.sha256. The manifest has been edited after the sidecar hash file was produced, or the sidecar hash is stale relative to the current manifest. The bundle's table of declared file hashes therefore cannot be trusted as authoritative.",
+        "headline": "Manifest content does not match manifest.sha256."
+      }
+    },
+    "INTEGRITY_OFFLINE_SCHEMA_INVALID": {
+      "category": "integrity",
+      "code": "INTEGRITY_OFFLINE_SCHEMA_INVALID",
+      "compliance": {
+        "consequence": "Even if the bundle's hash chain were intact, the artifact violates the public schema contract. The bundle cannot be cited as a conformant verification record under loquitur.schemas v1.",
+        "headline": "A required bundle artifact is structurally invalid.",
+        "required_action": "Reject the bundle. Require the issuer to inspect their bundle generation pipeline against the public schema package and regenerate."
+      },
+      "executive": {
+        "summary": "The structure of this record does not conform to the protocol specification. The record is rejected."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "One of the canonical bundle artifacts (manifest.json, p1.json, env1, canonical_input.json) failed validation against its public schema. The artifact is structurally invalid and cannot be processed downstream regardless of hash matches.",
+        "headline": "Bundle artifact failed schema validation."
+      }
+    },
+    "INTEGRITY_OK": {
+      "category": "integrity",
+      "code": "INTEGRITY_OK",
+      "compliance": {
+        "consequence": "The cryptographic linkage between the receipt and its supporting evidence is intact. The receipt can be cited as a faithful representation of the evidence the issuer attested to. This is a precondition for relying on the verdict, not a verdict on the underlying valuation.",
+        "headline": "Bundle integrity is intact and the receipt may be cited.",
+        "required_action": "No action required at the integrity layer. Continue with the remaining verdict review (coverage, freshness, conflict, materiality)."
+      },
+      "executive": {
+        "summary": "The verification record is internally consistent and has not been altered. The protocol confirms the receipt corresponds to the evidence the issuer submitted."
+      },
+      "severity": "info",
+      "technical": {
+        "detail": "The manifest, P1 receipt, and envelope hashes have been recomputed and match the values declared inside the bundle. Canonical input hashing succeeded under RFC 8785 (JCS). No tampering, truncation, or canonicalization drift was detected at the bundle integrity layer.",
+        "headline": "Bundle integrity verification completed without errors."
+      }
+    },
+    "MARK_ASOF_UNPARSEABLE": {
+      "category": "freshness",
+      "code": "MARK_ASOF_UNPARSEABLE",
+      "compliance": {
+        "consequence": "A document without a parsable effective date cannot be scored for staleness. The protocol cannot decide whether the evidence is current; the freshness layer is incomplete for this bundle.",
+        "headline": "Evidence date cannot be parsed and freshness cannot be evaluated.",
+        "required_action": "Require the issuer to attach or correct the evidence date in a parsable format (ISO-8601 preferred) and resubmit if freshness validation is required for the use case."
+      },
+      "executive": {
+        "summary": "A supporting document does not carry a clear effective date. The issuer should clarify when the document applies."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "An evidence document's as-of date is absent, malformed, or in a format the freshness evaluator cannot parse. Without a parsable date the freshness check cannot be performed for that document; the verifier emits a warning so the gap is visible to downstream review.",
+        "headline": "Evidence as-of date is missing or could not be parsed."
+      }
+    },
+    "MARK_FAR_OUTSIDE_RANGE": {
+      "category": "valuation_crosscheck",
+      "code": "MARK_FAR_OUTSIDE_RANGE",
+      "compliance": {
+        "consequence": "An independent cross-check places the mark outside the range a reasonable comparator would expect. The mark may still be correct (special asset characteristics, market dislocation) but cannot be accepted at face value without justification.",
+        "headline": "The declared valuation is materially outside the expected range.",
+        "required_action": "Require the issuer to attach a documented justification for the out-of-range mark before the verdict can advance to PASS."
+      },
+      "executive": {
+        "summary": "The valuation in this record is significantly different from a comparable benchmark. The issuer must justify the difference."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The cross-check service compared the declared mark_value against an independent reference range (peer comparables, model-driven range, prior-period bounds). The declared mark falls outside that range by more than the policy-configured tolerance. The cross-check does not establish that the mark is wrong; it establishes that the mark requires explanation.",
+        "headline": "Valuation mark is far outside the policy-acceptable range."
+      }
+    },
+    "MARK_NEAR_BOUNDARY": {
+      "category": "valuation_crosscheck",
+      "code": "MARK_NEAR_BOUNDARY",
+      "compliance": {
+        "consequence": "Acceptable now but trending toward out-of-range. Useful for forward monitoring.",
+        "headline": "The declared valuation is inside but near the edge of the expected range.",
+        "required_action": "No action required at the bundle level. Surface the position in portfolio drift monitoring."
+      },
+      "executive": {
+        "summary": "The valuation in this record is inside the expected range but near its edge."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "The mark falls inside the cross-check range but close to its outer edge. Informational only; recorded so that future drift toward out-of-range can be detected as a trend.",
+        "headline": "Valuation mark is near the cross-check range boundary."
+      }
+    },
+    "MARK_OFFSET_FROM_MIDPOINT": {
+      "category": "valuation_crosscheck",
+      "code": "MARK_OFFSET_FROM_MIDPOINT",
+      "compliance": {
+        "consequence": "Acceptable; recorded for portfolio-level pattern analysis.",
+        "headline": "The declared valuation sits clearly above or below the midpoint of the expected range.",
+        "required_action": "No action required at the bundle level. Aggregate offset patterns at the portfolio review level."
+      },
+      "executive": {
+        "summary": "The valuation in this record is closer to one end of the expected range than the middle."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "The mark sits in the upper or lower half of the cross-check range, distinguishably away from midpoint. Informational; useful for portfolio-level drift detection across many bundles.",
+        "headline": "Valuation mark is offset from the cross-check midpoint."
+      }
+    },
+    "MARK_OUTSIDE_RANGE": {
+      "category": "valuation_crosscheck",
+      "code": "MARK_OUTSIDE_RANGE",
+      "compliance": {
+        "consequence": "The mark deviates from the expected range but not by enough to demand justification. The deviation is documented; downstream reporting should be aware.",
+        "headline": "The declared valuation is outside the expected range, within a soft band.",
+        "required_action": "Document the deviation. No bundle-level action required."
+      },
+      "executive": {
+        "summary": "The valuation in this record differs from the benchmark, but within an acceptable soft margin."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "The mark falls outside the policy-acceptable cross-check range but within a soft band where the policy emits a warning rather than dropping the verdict. The deviation is recorded and surfaced to the reviewer.",
+        "headline": "Valuation mark falls outside the cross-check range."
+      }
+    },
+    "MARK_STALE": {
+      "category": "freshness",
+      "code": "MARK_STALE",
+      "compliance": {
+        "consequence": "Stale evidence cannot fully support a current valuation receipt. The receipt may be technically valid but its evidentiary basis is dated. Acting on this receipt for current settlement, listing, or NAV reporting carries elevated risk that should be documented or escalated.",
+        "headline": "Evidence is stale and the receipt's evidentiary basis is weakened.",
+        "required_action": "Require the issuer to refresh the stale evidence and regenerate the bundle. If this is not feasible immediately, document the staleness explicitly in any downstream consumption."
+      },
+      "executive": {
+        "summary": "Supporting documents in this record are older than policy expects. The issuer should provide updated documents."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "At least one evidence document's effective date is older than the policy-configured freshness window. The verifier emits a warning at this layer; whether the warning escalates to REVIEW or FAIL depends on policy configuration (typically REVIEW within 2x the threshold, FAIL beyond).",
+        "headline": "Evidence age exceeds the policy freshness threshold."
+      }
+    },
+    "MATERIAL_CHANGE_DETECTED": {
+      "category": "materiality",
+      "code": "MATERIAL_CHANGE_DETECTED",
+      "compliance": {
+        "consequence": "The receipt records a change above the policy materiality threshold. This is informational, not a failure; the change is part of the audit trail. Downstream consumers (NAV reporting, LP communication, listing publication) must surface this change; suppressing it would be a misstatement.",
+        "headline": "A material change in claim values is recorded.",
+        "required_action": "Ensure the material change is reflected in downstream reporting consistent with policy. No bundle-level action required."
+      },
+      "executive": {
+        "summary": "This record reflects a meaningful change from the previous version. The change must be surfaced in any downstream reporting."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "The change_summary indicates that at least one tracked claim changed by more than the policy-configured materiality threshold relative to the immediately superseded snapshot. The change is recorded with delta_pct and absolute delta values. The verdict is not affected by materiality alone; the marker exists to ensure the change is visible to downstream consumers and not silently absorbed.",
+        "headline": "A material change was detected relative to the previous snapshot."
+      }
+    },
+    "METHOD_BINDING_MISSING": {
+      "category": "policy",
+      "code": "METHOD_BINDING_MISSING",
+      "compliance": {
+        "consequence": "Without a method binding the bundle does not declare how the valuation was computed or which evidence supports the chosen method. Audit cannot reconstruct the methodology. The verdict drops to REVIEW.",
+        "headline": "The valuation method is not bound to specific evidence.",
+        "required_action": "Require the issuer to attach an explicit method binding (method name, supporting evidence references) and resubmit."
+      },
+      "executive": {
+        "summary": "This record does not state how the valuation was computed. The issuer must specify the method."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The active policy requires that the valuation method (e.g. income approach, sales comparison, cost approach for property; mark-to-market, mark-to-model for other asset classes) be explicitly bound to its supporting evidence. The bundle does not declare a method binding, or declares one not recognized by the policy.",
+        "headline": "Valuation method binding is absent or not declared in policy."
+      }
+    },
+    "MISSING_MARK_FIELDS": {
+      "category": "policy",
+      "code": "MISSING_MARK_FIELDS",
+      "compliance": {
+        "consequence": "The mark is the policy-driven summary of the valuation. An incomplete mark cannot be cited; downstream consumers (LP reports, NAV publications, listing data) require a complete mark to publish anything. The verdict cannot be PASS.",
+        "headline": "The valuation mark is incomplete.",
+        "required_action": "Require the issuer to provide the missing mark fields and regenerate the bundle."
+      },
+      "executive": {
+        "summary": "The valuation summary in this record is incomplete. The issuer must provide the missing fields."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The mark object (the policy-driven valuation summary) is missing one or more fields required by the active policy. Common cases: mark_value missing, mark_currency missing, mark_method missing, mark_asof missing. The policy refuses to issue PASS on an incomplete mark.",
+        "headline": "Required mark fields are absent."
+      }
+    },
+    "MISSING_REQUIRED_INPUTS": {
+      "category": "policy",
+      "code": "MISSING_REQUIRED_INPUTS",
+      "compliance": {
+        "consequence": "Without the required inputs the policy cannot be fully evaluated. The bundle is incomplete relative to its declared workflow and the receipt cannot be cited as the result of a complete policy application.",
+        "headline": "The bundle is missing inputs the policy requires.",
+        "required_action": "Require the issuer to attach the missing required inputs and regenerate the bundle."
+      },
+      "executive": {
+        "summary": "Required information is missing from this record. The verification could not be completed."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The active policy declares a set of required canonical input fields for the asset type and workflow. One or more of these required fields is absent from canonical_input.json. The policy cannot be applied to an incomplete input; the verdict drops to REVIEW pending input completion.",
+        "headline": "Inputs required by the active policy are missing from canonical input."
+      }
+    },
+    "NEEDS_REVIEW": {
+      "category": "policy",
+      "code": "NEEDS_REVIEW",
+      "compliance": {
+        "consequence": "The protocol explicitly does not issue PASS without human review. Downstream consumers must wait for the review outcome before treating the receipt as authoritative.",
+        "headline": "The policy requires human review before this bundle can be relied upon.",
+        "required_action": "Route the bundle to the responsible reviewer per policy. Do not rely on the receipt for operational decisions until the review is documented."
+      },
+      "executive": {
+        "summary": "This record requires human review before it can be used. The relevant reviewer must complete sign-off."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The active policy returned an explicit REVIEW verdict on this bundle. The trigger is policy-specific: ambiguous evidence, edge-case method binding, or a configured manual gate. The bundle is not failing but is not eligible for unattended PASS.",
+        "headline": "Policy evaluation requires manual review."
+      }
+    },
+    "OFFLINE_CANONICAL_INPUT_MISSING": {
+      "category": "offline",
+      "code": "OFFLINE_CANONICAL_INPUT_MISSING",
+      "compliance": {
+        "consequence": "Replay cannot proceed without canonical input. Verdict drops to REVIEW.",
+        "headline": "Offline verifier cannot find the canonical input.",
+        "required_action": "Require canonical_input.json to be attached and bundle resubmitted."
+      },
+      "executive": {
+        "summary": "The data needed for independent verification is not present."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "Surface code emitted by the offline verifier when canonical_input.json is not present in the bundle root. Equivalent in semantics to COMPLETENESS_OFFLINE_MISSING_CANONICAL_INPUT; emitted from the offline verifier path.",
+        "headline": "Offline verifier could not locate canonical_input.json."
+      }
+    },
+    "OFFLINE_INPUT_HASH_NOT_VERIFIED": {
+      "category": "offline",
+      "code": "OFFLINE_INPUT_HASH_NOT_VERIFIED",
+      "compliance": {
+        "consequence": "The protocol cannot confirm that the input file matches the receipt's declared hash. The receipt-to-input link is not validated.",
+        "headline": "Input-hash binding could not be confirmed.",
+        "required_action": "Investigate why the hash check did not run. Provide missing material or regenerate the bundle."
+      },
+      "executive": {
+        "summary": "A key check linking the data to the verification record could not be completed."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The verifier reached the input-hash check but could not perform it (typically because canonical_input is missing or canonicalization failed earlier). The check is recorded as not-verified rather than failed; downstream reasoning treats this as partial coverage.",
+        "headline": "Input hash check could not be performed."
+      }
+    },
+    "OFFLINE_MANIFEST_MISSING": {
+      "category": "offline",
+      "code": "OFFLINE_MANIFEST_MISSING",
+      "compliance": {
+        "consequence": "Without a manifest the bundle has no declared content inventory; per-file integrity claims cannot be made. Downstream consumption should not treat the bundle as a complete verification record.",
+        "headline": "The bundle has no manifest and cannot be fully verified.",
+        "required_action": "Require the issuer to attach manifest.json and resubmit. Do not rely on this bundle for current operational decisions until the manifest is provided."
+      },
+      "executive": {
+        "summary": "This record is missing its inventory of contents. It cannot be fully verified until the issuer provides the missing piece."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "Surface code from the offline verifier when manifest.json is not present. The bundle has no declared inventory, so per-file hash checks cannot be performed; the verdict drops to REVIEW pending bundle completion.",
+        "headline": "Offline verifier could not locate manifest.json."
+      }
+    },
+    "OFFLINE_MATERIAL_MISSING": {
+      "category": "offline",
+      "code": "OFFLINE_MATERIAL_MISSING",
+      "compliance": {
+        "consequence": "Partial verification only. Strongest replay guarantee not in force.",
+        "headline": "Offline verification cannot be performed in full.",
+        "required_action": "Identify the missing material and require the issuer to complete the bundle."
+      },
+      "executive": {
+        "summary": "Some pieces of this record needed for independent verification are missing."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "Aggregate code indicating that one or more pieces of offline verification material are missing. Specific sub-codes identify which piece. The verifier proceeds with partial coverage.",
+        "headline": "Offline verification material is incomplete."
+      }
+    },
+    "OFFLINE_REPLAY_FAILED": {
+      "category": "offline",
+      "code": "OFFLINE_REPLAY_FAILED",
+      "compliance": {
+        "consequence": "The protocol's strongest claim — that anyone can reproduce the verification verdict from the bundle alone — does not hold. The bundle and the receipt are inconsistent.",
+        "headline": "The receipt cannot be reproduced from the bundle.",
+        "required_action": "Reject the bundle. Require the issuer to investigate the bundle generation pipeline for a non-deterministic step and regenerate."
+      },
+      "executive": {
+        "summary": "Independent reproduction of this verification record fails. The record is rejected."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "The offline verifier executed the replay path and the result it computed disagrees with the receipt's declared verdict, reason codes, or output structure. The receipt cannot be reproduced from the bundle on a disconnected machine.",
+        "headline": "Offline replay produced a result inconsistent with the receipt."
+      }
+    },
+    "OFFLINE_REPLAY_REVIEW": {
+      "category": "offline",
+      "code": "OFFLINE_REPLAY_REVIEW",
+      "compliance": {
+        "consequence": "Even though the receipt may declare PASS, an independent offline replay surfaces conditions that warrant manual review. Treat the bundle as REVIEW until the conditions are resolved.",
+        "headline": "Independent replay finds review conditions on this bundle.",
+        "required_action": "Investigate the review conditions surfaced by the replay. Resolve before relying on the receipt."
+      },
+      "executive": {
+        "summary": "Independent verification finds issues requiring review on this record."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The offline replay completed but reached a verdict of REVIEW rather than confirming PASS. The receipt is not contradicted but the replay path independently flagged REVIEW conditions.",
+        "headline": "Offline replay reached a result requiring review."
+      }
+    },
+    "OFFLINE_REPLAY_SKIPPED": {
+      "category": "offline",
+      "code": "OFFLINE_REPLAY_SKIPPED",
+      "compliance": {
+        "consequence": "The bundle was not subjected to the strongest verification path. Partial verification only.",
+        "headline": "Independent replay was not executed.",
+        "required_action": "If full verification is required for the use case, re-run the verifier in full-replay mode against a complete bundle."
+      },
+      "executive": {
+        "summary": "The strongest form of independent verification was not performed on this record."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "The replay path was skipped, typically because required material was missing earlier in the verification flow or the verifier was invoked in a mode that does not include replay. The verdict reflects only the layers that did execute.",
+        "headline": "Offline replay was not executed."
+      }
+    },
+    "OFFLINE_REPLAY_WARN": {
+      "category": "offline",
+      "code": "OFFLINE_REPLAY_WARN",
+      "compliance": {
+        "consequence": "The bundle is acceptable but the warnings deserve attention. They may indicate emerging issues that will become failures in future cycles.",
+        "headline": "Independent replay completed with warnings.",
+        "required_action": "Review the specific warnings and address them on the next reporting cycle."
+      },
+      "executive": {
+        "summary": "Independent verification noted minor concerns on this record. Acceptable now but worth review."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "The replay finished without verdict-changing failures but emitted one or more warning conditions (e.g. approaching freshness threshold, undeclared files under a policy that warns on them). The verdict is not blocked but the bundle should be reviewed for warnings.",
+        "headline": "Offline replay completed with warnings."
+      }
+    },
+    "P1_TIMESTAMP_OUT_OF_WINDOW": {
+      "category": "freshness",
+      "code": "P1_TIMESTAMP_OUT_OF_WINDOW",
+      "compliance": {
+        "consequence": "The temporal binding between receipt and snapshot is broken. The receipt cannot be cited as a contemporaneous attestation.",
+        "headline": "Receipt timestamp falls outside the acceptable issuance window.",
+        "required_action": "Require the issuer to reissue with a corrected timestamp or document the timestamp anomaly explicitly."
+      },
+      "executive": {
+        "summary": "The timing of this record's issuance does not match the period it describes. The issuer must clarify."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "Equivalent semantics to FRESHNESS_P1_TIMESTAMP_OOW with a different code surface. The P1 timestamp falls outside the policy-defined acceptable issuance window relative to the snapshot.",
+        "headline": "P1 receipt timestamp is outside the acceptable issuance window."
+      }
+    },
+    "POLICY_BUNDLE_EXTRA_FILES": {
+      "category": "policy",
+      "code": "POLICY_BUNDLE_EXTRA_FILES",
+      "compliance": {
+        "consequence": "The policy defines what evidence the workflow expects. Extra files outside that set may be acceptable but are not part of the policy-validated scope; they may also indicate scope creep or accidental inclusion of unrelated material.",
+        "headline": "Bundle contains files the policy does not enumerate.",
+        "required_action": "Either remove the policy-disallowed files and regenerate, or document explicit policy approval for their inclusion before downstream consumption."
+      },
+      "executive": {
+        "summary": "This record contains files outside the expected scope. The issuer should either remove them or document why they are present."
+      },
+      "severity": "warn",
+      "technical": {
+        "detail": "The active policy declares a permitted file inventory. The bundle contains files outside this set. The policy reports a warning so the deviation is visible; whether the deviation requires action depends on policy and downstream consumption.",
+        "headline": "Bundle contains files outside the policy-allowed file set."
+      }
+    },
+    "REQUIRED_CLAIMS_PRESENT": {
+      "category": "coverage",
+      "code": "REQUIRED_CLAIMS_PRESENT",
+      "compliance": {
+        "consequence": "Required claim coverage is met. This does not mean the claims are correct; it means none are missing. Document-backing, freshness, and conflict status are evaluated separately.",
+        "headline": "The bundle covers every claim the policy requires.",
+        "required_action": "No action required at the coverage layer. Continue with downstream verdict review."
+      },
+      "executive": {
+        "summary": "This record contains all the information the policy requires. Other quality checks are evaluated separately."
+      },
+      "severity": "info",
+      "technical": {
+        "detail": "The coverage_summary indicates that every claim required by the active policy (for the asset type, workflow, and policy version) is present in the canonical input. This is a precondition for PASS; absence of any required claim drops the verdict to REVIEW or FAIL depending on policy strictness.",
+        "headline": "All required claims for the active policy are present."
+      }
+    },
+    "REQUIRED_EVIDENCE_PRESENT": {
+      "category": "evidence",
+      "code": "REQUIRED_EVIDENCE_PRESENT",
+      "compliance": {
+        "consequence": "Evidence inventory is met. Document-claim bindings establish the audit trail. Freshness and conflict status are evaluated separately; presence alone is not sufficient for verdict.",
+        "headline": "Required source documents are present and bound to their claims.",
+        "required_action": "No action required at the evidence layer. Continue with freshness and conflict review."
+      },
+      "executive": {
+        "summary": "All required supporting documents are attached to this record. Their content is checked separately."
+      },
+      "severity": "info",
+      "technical": {
+        "detail": "The evidence_index lists every document required by the policy for this asset type and workflow. Each document is hashed, classified by document_class, and bound to the claims it supports. This is a precondition for PASS at the evidence layer.",
+        "headline": "All evidence required by the active policy is present."
+      }
+    },
+    "UNSUPPORTED_KEY_CLAIM": {
+      "category": "coverage",
+      "code": "UNSUPPORTED_KEY_CLAIM",
+      "compliance": {
+        "consequence": "The receipt depends on issuer self-declaration for this claim. In regulated settings (Reg D placements, securitized credit, fund NAV updates) this is typically insufficient: the audit trail cannot be reconstructed without document backing. The verdict drops to REVIEW.",
+        "headline": "A required claim is asserted by the issuer without document evidence.",
+        "required_action": "Require the issuer to attach a source document for the unsupported claim and resubmit, or document explicit acceptance of declared-only basis with sign-off from the responsible compliance officer."
+      },
+      "executive": {
+        "summary": "A key piece of information in this record is stated by the issuer but not backed by a supporting document. Independent checking is not possible until evidence is attached."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "A claim required by the active policy is present in canonical input but its support_basis is 'declared_only', not backed by a parsed document with extraction provenance. The claim may be correct, but it is not auditable: a regulator cannot trace the value back to a specific document, page, and section.",
+        "headline": "A key claim is present but is declared rather than document-backed."
+      }
+    },
+    "VOCABULARY_VALUE_INVALID": {
+      "category": "vocabulary",
+      "code": "VOCABULARY_VALUE_INVALID",
+      "compliance": {
+        "consequence": "A malformed asset type, workflow or anchoring method is a defect of the producer, not a question of which vocabulary the reader holds. The record cannot be cited as a conformant record under the protocol, whatever its other content.",
+        "headline": "The record carries a malformed category value and breaks the protocol contract.",
+        "required_action": "Reject the record. Require the producer to regenerate it with a correctly formed value from the registered vocabulary."
+      },
+      "executive": {
+        "summary": "This record names its category in a form the protocol does not allow. The record is rejected and must be reissued."
+      },
+      "severity": "fail",
+      "technical": {
+        "detail": "A member governed by a registered vocabulary (an asset type, a workflow or an anchoring method) carries a value that does not match the identifier grammar ^[a-z0-9][a-z0-9_]{0,63}$: it is not a string, or it holds an upper-case letter, a hyphen, a space, or more than 64 characters. The object breaks its contract, whatever any vocabulary holds.",
+        "headline": "A value governed by a registered vocabulary is malformed."
+      }
+    },
+    "VOCABULARY_VALUE_UNKNOWN": {
+      "category": "vocabulary",
+      "code": "VOCABULARY_VALUE_UNKNOWN",
+      "compliance": {
+        "consequence": "The record is well formed and its other findings stand, but it names a value outside the vocabulary this reader holds. What the value means cannot be confirmed from that vocabulary, so the record cannot be accepted as verified until the value is recognized. The verdict is REVIEW.",
+        "headline": "The record names an asset type, workflow or method the reader does not recognize.",
+        "required_action": "Either obtain the vocabulary version that registers the value and verify again, or treat the record as outside the verticals you support and document that decision."
+      },
+      "executive": {
+        "summary": "This record names a category that the reader's reference list does not include. It needs review before it is relied on."
+      },
+      "severity": "review",
+      "technical": {
+        "detail": "A member governed by a registered vocabulary (an asset type, a workflow or an anchoring method) carries an identifier that matches the grammar ^[a-z0-9][a-z0-9_]{0,63}$ but is not a value of the version of that vocabulary the reader holds. The object satisfies its contract. The value may be registered in a later version of the vocabulary, or belong to a vertical the reader does not support; no other finding depends on it.",
+        "headline": "A value is well formed but is not in the registered vocabulary the reader holds."
+      }
+    }
+  },
+  "reason_code_vocabulary": "loquitur.reason_codes.v1"
+}

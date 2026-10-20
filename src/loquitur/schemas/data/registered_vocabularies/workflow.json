@@ -1,0 +1,44 @@
+{
+  "object_type": "registered_vocabulary",
+  "schema_version": "v1",
+  "kind": "workflow",
+  "version": "1.0.0",
+  "values": {
+    "fund_nav_initial": {
+      "since": "1.0.0",
+      "status": "active",
+      "title": "Initial fund NAV evidence",
+      "profile": null,
+      "asset_types": [
+        "fund_nav"
+      ]
+    },
+    "fund_nav_update": {
+      "since": "1.0.0",
+      "status": "active",
+      "title": "Fund NAV update",
+      "profile": null,
+      "asset_types": [
+        "fund_nav"
+      ]
+    },
+    "property_pre_listing": {
+      "since": "1.0.0",
+      "status": "active",
+      "title": "Property pre-listing evidence",
+      "profile": null,
+      "asset_types": [
+        "property"
+      ]
+    },
+    "property_review": {
+      "since": "1.0.0",
+      "status": "active",
+      "title": "Property periodic review",
+      "profile": null,
+      "asset_types": [
+        "property"
+      ]
+    }
+  }
+}

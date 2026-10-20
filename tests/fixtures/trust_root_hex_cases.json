@@ -1,0 +1,99 @@
+{
+  "description": "Shared case table for the lowercase-hex rule of trust-root.md (row 5, section 4.2) and the uncompressed SEC1 public key rule. Every case is applied to a signature or key produced at test time with an ephemeral key; no signature or key is stored here. Mutations, applied to a 128-character signature `sig` whose r and s halves each start with '0': none = sig; z128 = 128 'z'; upper = sig.upper(); space_padded = ' ' + sig[1:64] + ' ' + sig[65:]; zero_x_prefixed = '0x' + sig[2:64] + '0x' + sig[66:]; underscored = sig[1] + '_' + sig[2:64] + sig[65] + '_' + sig[66:]; truncated_127 = sig[:127]; extended_129 = sig + '0'; empty = ''; non_string = the integer 12345. The uppercase, space-padded and underscored forms denote the same r and s under int(x, 16); the 0x-prefixed form parses too, to different integers. Public key mutations, applied to a lowercase uncompressed key `pub`: none = pub; upper = '04' + pub[2:].upper(); leading_space = ' ' + pub; trailing_newline = pub + '\\n'. `pinned` false means the signature names a key_id no pinned root carries: row 5 is evaluated before row 6, so the status is still MALFORMED_SIGNATURE.",
+  "root_signature_cases": [
+    {
+      "id": "valid-lowercase",
+      "mutation": "none",
+      "pinned": true,
+      "expected_status": "ROOT_SIGNATURE_VALID"
+    },
+    {
+      "id": "z128",
+      "mutation": "z128",
+      "pinned": true,
+      "expected_status": "MALFORMED_SIGNATURE"
+    },
+    {
+      "id": "z128-unpinned-key",
+      "mutation": "z128",
+      "pinned": false,
+      "expected_status": "MALFORMED_SIGNATURE"
+    },
+    {
+      "id": "uppercase",
+      "mutation": "upper",
+      "pinned": true,
+      "expected_status": "MALFORMED_SIGNATURE"
+    },
+    {
+      "id": "uppercase-unpinned-key",
+      "mutation": "upper",
+      "pinned": false,
+      "expected_status": "MALFORMED_SIGNATURE"
+    },
+    {
+      "id": "space-padded",
+      "mutation": "space_padded",
+      "pinned": true,
+      "expected_status": "MALFORMED_SIGNATURE"
+    },
+    {
+      "id": "0x-prefixed",
+      "mutation": "zero_x_prefixed",
+      "pinned": true,
+      "expected_status": "MALFORMED_SIGNATURE"
+    },
+    {
+      "id": "underscored",
+      "mutation": "underscored",
+      "pinned": true,
+      "expected_status": "MALFORMED_SIGNATURE"
+    },
+    {
+      "id": "length-127",
+      "mutation": "truncated_127",
+      "pinned": true,
+      "expected_status": "MALFORMED_SIGNATURE"
+    },
+    {
+      "id": "length-129",
+      "mutation": "extended_129",
+      "pinned": true,
+      "expected_status": "MALFORMED_SIGNATURE"
+    },
+    {
+      "id": "empty",
+      "mutation": "empty",
+      "pinned": true,
+      "expected_status": "MALFORMED_SIGNATURE"
+    },
+    {
+      "id": "non-string",
+      "mutation": "non_string",
+      "pinned": true,
+      "expected_status": "MALFORMED_SIGNATURE"
+    }
+  ],
+  "root_public_key_cases": [
+    {
+      "id": "lowercase",
+      "mutation": "none",
+      "expected": "accepted"
+    },
+    {
+      "id": "uppercase",
+      "mutation": "upper",
+      "expected": "rejected"
+    },
+    {
+      "id": "leading-space",
+      "mutation": "leading_space",
+      "expected": "rejected"
+    },
+    {
+      "id": "trailing-newline",
+      "mutation": "trailing_newline",
+      "expected": "rejected"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+include README.md
+include LICENSE-APACHE
+include LICENSE-MIT
+include NOTICE
+recursive-include src/loquitur/schemas/data *.json *.md
+recursive-include src/loquitur/schemas/types *.d.ts
+recursive-include src/loquitur/schemas/compatibility_baselines *.json
+recursive-exclude tests *
+recursive-exclude .pytest_cache *
+recursive-exclude __pycache__ *
+recursive-exclude src *.py[cod]
+prune build
+prune dist
+prune htmlcov

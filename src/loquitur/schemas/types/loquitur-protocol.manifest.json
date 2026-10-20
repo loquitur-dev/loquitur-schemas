@@ -1,0 +1,31 @@
+{
+  "canonical_interface_count": 5,
+  "canonical_schema_sha256": {
+    "change_summary.schema.json": "979544363fc5bd4a9212971275a2ab9001add99acd0cb2f227ffd71c656d39b4",
+    "coverage_summary.schema.json": "0ab18e2ccd78dfda90545bf72de5fdf5aa8f1a428ea4edd26614be791424e158",
+    "lineage_summary.schema.json": "6c93f1b9b7a2217ff2d06e33f000a6a6dd6309928d6945b01aa1cfb1502a65fe",
+    "verification_receipt.schema.json": "88a132f58225449ced6d6d2a4c6ba470b888d42593249789387946ce3ecb4d6c",
+    "verification_summary.schema.json": "00d9cc730ab910b86b19535b282899d2c55a827940f105916bc86bbdef160e52"
+  },
+  "generator_id": "loquitur.schemas.typescript.v2",
+  "output_path": "loquitur-protocol.d.ts",
+  "output_sha256": "cb8ed08c5922d5d86411f6ac33c3501fe6da2c1948f404381b8f2a65470cf23f",
+  "registry_interface_count": 2,
+  "registry_schema_sha256": {
+    "registry_entry.schema.json": "8d7e5851962d259ede7d7913c201908bfe6b46f4eb0b2fa85a4a9891d1724abf",
+    "trust_registry.schema.json": "ed491e13e0a91027bc4e3d9c738ae04000295a82834fd73645be4ecf4155f602"
+  },
+  "registry_verdicts": [
+    "PASS",
+    "WARN",
+    "REVIEW",
+    "FAIL"
+  ],
+  "schema_version": "loquitur.typescript_declaration_manifest.v1",
+  "verification_statuses": [
+    "pass",
+    "warning",
+    "review",
+    "fail"
+  ]
+}

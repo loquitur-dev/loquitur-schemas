@@ -1,0 +1,10 @@
+{
+  "algorithm": "secp256k1_ecdsa_sha256",
+  "classification": "demo_non_production_public_verification_material",
+  "key_id": "demo-key-2",
+  "object_type": "demo_secp256k1_public_key",
+  "production_use_allowed": false,
+  "public_key_hex": "049dd6b8f8236d4cda3a1b8a533a2ba1b83c002939ed5ceb7804d69bf8022160b8f3d0dd9e830076203a82f38c668ac93edbd47cb8cba7a311f3c9025262806efd",
+  "trust_root": false,
+  "warning": "Synthetic public verification fixture only. This is not a production trust root or issuer authority."
+}

@@ -1,0 +1,26 @@
+{
+  "object_type": "registered_vocabulary",
+  "schema_version": "v1",
+  "kind": "anchoring_method",
+  "version": "1.0.0",
+  "values": {
+    "blockchain_transaction": {
+      "since": "1.0.0",
+      "status": "active",
+      "title": "A transaction recorded on a blockchain",
+      "profile": null
+    },
+    "rfc3161_timestamp": {
+      "since": "1.0.0",
+      "status": "active",
+      "title": "An RFC 3161 time-stamp token",
+      "profile": null
+    },
+    "transparency_log_checkpoint": {
+      "since": "1.0.0",
+      "status": "active",
+      "title": "A checkpoint of a transparency log",
+      "profile": null
+    }
+  }
+}

@@ -1,0 +1,399 @@
+name: ci
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  # release.yml runs this whole workflow on the tagged commit before it builds anything.
+  workflow_call:
+
+# One run per branch and event. Without this, a quick sequence of pushes leaves several runs
+# racing for the same answer and the last to finish wins, which is not necessarily the last
+# commit. Called by release.yml, this workflow sees the caller's name and ref; the `ci-` prefix
+# and the event keep its group apart from any group of the caller.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+# Least privilege. Without this the workflow runs with whatever the repository
+# default grants, which is often write: a standing capability this workflow does not need,
+# since it only reads the tree and runs tests.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install (with dev extra)
+        run: |
+          python -m pip install pip==26.2.1
+          pip install -e ".[dev]"
+      - name: Lint (ruff)
+        run: |
+          # Pinned: an unpinned linter changes the gate's definition without a commit, and a
+          # new release whose defaults enable another rule turns the lint red on unchanged code.
+          python -m pip install ruff==0.15.12
+          ruff check src tests
+          ruff format --check src tests
+      - name: Type check (mypy --strict, configured in pyproject.toml)
+        run: |
+          # Pinned for the reason the linter above is: a new release adds checks to --strict.
+          python -m pip install mypy==2.4.0
+          mypy
+      # The TypeScript compile check in tests/test_typescript_type_generation.py, the one test
+      # asking whether the shipped declarations typecheck, skips when no `tsc` is on PATH. The
+      # compiler is installed at an exact version, the one loquitur-verify-ts locks, for
+      # the reason the linter above is pinned, and LOQUITUR_REQUIRE_TSC turns a missing
+      # compiler into a failure rather than a quiet skip.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: Install the TypeScript compiler
+        run: npm install --global typescript@5.9.3
+      - name: Run test suite
+        env:
+          LOQUITUR_REQUIRE_TSC: "1"
+        run: pytest -q
+
+  siblings:
+    # The whole suite with the published siblings checked out beside this repository, as the
+    # tests look for them. The `test` job above has none of them and skips those tests:
+    # tests/test_normative_source_is_the_protocol.py, which holds the mirrored artifacts to
+    # loquitur-protocol's, and the four sibling-bound tests of tests/test_public_boundary.py,
+    # which hold tools/check_public_boundary.py byte for byte to the copies in
+    # loquitur-verify-py and loquitur-verify-ts and its needle lists and maintainer rule to the
+    # protocol's checker. Without this job those tests would skip in every run of this
+    # workflow, and a skip reads as green.
+    #
+    # The job runs in a public repository: a GITHUB_TOKEN is scoped to its own repository and
+    # cannot check out a private sibling. The probe step asks, with no credentials, which of the
+    # three siblings are publicly readable, and only those are checked out. With all three,
+    # LOQUITUR_REQUIRE_SIBLINGS is set and a test that reads a sibling fails instead of
+    # skipping. With fewer, a test that reads a sibling that is not checked out skips and names
+    # it, and the last step fails the job on any other skip, so a sibling that is published and
+    # missing still fails the run.
+    #
+    # The siblings are checked out at the head of their default branches, not at a tag matching
+    # this repository's, so a release run depends on their state when it runs. A sibling that
+    # fails this job on a tag is fixed in the sibling and the run re-run; the tag is not moved.
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-24.04
+    # Every Python the documents name, 3.11 or later, up to the newest release, as in every
+    # job of this workflow that runs Python.
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - name: Find the siblings that are publicly readable
+        id: probe
+        # Outside any checkout, so no stored credential is sent, and with prompts off, so a sibling
+        # that is not public answers "not found" at once instead of asking for a password. Any other
+        # failure (a network error, a server error) is no answer and is asked again, up to four
+        # times with a growing pause. On a tag, which release.yml runs this workflow for, a sibling
+        # still unanswered fails the job, so that a release never skips a sibling's checks for a
+        # transient failure; on any other run it is skipped with a warning.
+        working-directory: ${{ runner.temp }}
+        shell: bash
+        env:
+          GIT_TERMINAL_PROMPT: "0"
+          OWNER: ${{ github.repository_owner }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          published=""
+          for repo in loquitur-protocol loquitur-verify-py loquitur-verify-ts; do
+            answer=""
+            for attempt in 1 2 3 4; do
+              status=0
+              error="$(git ls-remote --exit-code "https://github.com/$OWNER/$repo.git" HEAD 2>&1 >/dev/null)" || status=$?
+              if [ "$status" -eq 0 ]; then answer=readable; break; fi
+              # Exit 2 is a repository with no HEAD; the messages are git's for a 401 with prompts
+              # off and for a 404. Each says the sibling is not publicly readable.
+              case "$status:$error" in
+                2:* | *"could not read Username"* | *"Repository not found"* | *"' not found"*) answer=unreadable; break ;;
+              esac
+              echo "probe of $repo failed (attempt $attempt of 4, exit $status): $error"
+              if [ "$attempt" -lt 4 ]; then sleep $((5 << (attempt - 1))); fi
+            done
+            case "$answer" in
+              readable) published="$published $repo" ;;
+              unreadable) ;;
+              *)
+                if [ "$REF_TYPE" = tag ]; then
+                  echo "::error::$repo could not be probed, so this run on a tag cannot tell whether its checks apply"
+                  exit 1
+                fi
+                echo "::warning::$repo could not be probed, so this run skips its checks"
+                ;;
+            esac
+          done
+          published="${published# }"
+          echo "published=$published" >> "$GITHUB_OUTPUT"
+          if [ "$published" = "loquitur-protocol loquitur-verify-py loquitur-verify-ts" ]; then
+            echo "all=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "publicly readable siblings: ${published:-none}"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with: { path: loquitur-schemas }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: contains(format(' {0} ', steps.probe.outputs.published), ' loquitur-protocol ')
+        with: { repository: "${{ github.repository_owner }}/loquitur-protocol", path: loquitur-protocol }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: contains(format(' {0} ', steps.probe.outputs.published), ' loquitur-verify-py ')
+        with: { repository: "${{ github.repository_owner }}/loquitur-verify-py", path: loquitur-verify-py }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: contains(format(' {0} ', steps.probe.outputs.published), ' loquitur-verify-ts ')
+        with: { repository: "${{ github.repository_owner }}/loquitur-verify-ts", path: loquitur-verify-ts }
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with: { python-version: "${{ matrix.python-version }}" }
+      - name: Install (with dev extra)
+        run: |
+          python -m pip install pip==26.2.1
+          python -m pip install "./loquitur-schemas[dev]"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "22"
+      - name: Install the TypeScript compiler
+        # The same exact version the `test` job installs, for the same reason.
+        run: npm install --global typescript@5.9.3
+      - name: Assert the sibling-bound modules are collected, not skipped
+        working-directory: loquitur-schemas
+        run: |
+          python - <<'PY'
+          import subprocess, sys
+          MODULES = ["test_normative_source_is_the_protocol.py", "test_public_boundary.py"]
+          out = subprocess.run([sys.executable, "-m", "pytest", "--collect-only", "-q"],
+                               capture_output=True, text=True, check=False).stdout
+          missing = [m for m in MODULES if f"{m}::" not in out]
+          if missing:
+              raise SystemExit(f"modules not collected: {missing}")
+          print(f"all {len(MODULES)} sibling-bound modules collected")
+          PY
+      - name: Test; only a sibling that is not publicly readable may skip a test
+        working-directory: loquitur-schemas
+        shell: bash
+        env:
+          LOQUITUR_REQUIRE_SIBLINGS: "${{ steps.probe.outputs.all == 'true' && '1' || '' }}"
+          LOQUITUR_REQUIRE_TSC: "1"
+          PUBLISHED: "${{ steps.probe.outputs.published }}"
+        run: |
+          python -m pytest -q -rs | tee pytest.log
+          python - <<'PY'
+          import os
+          import sys
+          absent = {"loquitur-protocol", "loquitur-verify-py", "loquitur-verify-ts"} - set(os.environ["PUBLISHED"].split())
+          # Every skip must name a sibling that is not checked out.
+          skips = [line for line in open("pytest.log", encoding="utf-8") if line.startswith("SKIPPED")]
+          other = [line for line in skips if not any(name in line for name in absent)]
+          if other:
+              sys.exit("tests skipped for a reason other than a sibling that is not publicly readable:\n" + "".join(other))
+          print(f"{len(skips)} skip line(s), each for a sibling that is not publicly readable")
+          PY
+
+  boundary:
+    # What this repository carries, read for disclosure and for a server-side stack. The suite
+    # runs tools/check_public_boundary.py through tests/test_public_boundary.py; this job runs
+    # the file directly, as loquitur-verify-ts does, so the gate has a name of its own in the
+    # checks of a pull request and does not depend on the suite being collected. It needs only
+    # the standard library.
+    runs-on: ubuntu-24.04
+    # Every Python the documents name, 3.11 or later, up to the newest release, as in every
+    # job of this workflow that runs Python.
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: No disclosure needle or server-side stack name in any tracked file
+        run: python tools/check_public_boundary.py
+
+  wheel-gate:
+    # The published wheel must match src/ exactly, and must install and run from a clean
+    # environment; `tools/local_wheel_gate.py` checks both, as its equivalent does in
+    # loquitur-verify-py. This is the repository whose wheel carries the JSON Schemas and
+    # the reason-code catalog, so a stale member here is a wrong published vocabulary, and
+    # PyPI freezes it for the life of the version.
+    runs-on: ubuntu-24.04
+    # Every Python the documents name, 3.11 or later, up to the newest release, as in every
+    # job of this workflow that runs Python.
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Build, assert the wheel matches src/, install into a clean venv, smoke the CLI
+        run: |
+          python -m pip install pip==26.2.1 build==1.6.1
+          python tools/local_wheel_gate.py
+
+  dco:
+    # CONTRIBUTING requires a Developer Certificate of Origin sign-off on every commit, and
+    # this job enforces it: a policy no gate checks is satisfied by accident until the first
+    # commit that forgets.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The sign-off lives in the commit message, so the commits themselves are what
+          # this job reads, and a shallow clone cannot answer the question.
+          fetch-depth: 0
+      - name: Every commit must carry a Signed-off-by matching its author
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          BEFORE: ${{ github.event.before }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          base="$BASE"
+          head="$HEAD_SHA"
+          before="$BEFORE"
+          default="$DEFAULT_BRANCH"
+          zero="0000000000000000000000000000000000000000"
+          if [ -n "$base" ]; then
+            range="$base..$head"
+          elif [ -n "$before" ] && [ "$before" != "$zero" ] && git cat-file -e "$before^{commit}" 2>/dev/null; then
+            range="$before..$head"
+          elif [ "$before" = "$zero" ] && [ "$REF" = "refs/heads/$default" ]; then
+            # The default branch itself is pushed for the first time: no earlier revision of it
+            # exists and no other branch holds its commits, so every commit it carries is new.
+            range="$head"
+          else
+            # A new branch, or a push whose earlier revision this clone does not hold: there
+            # is no earlier revision of the branch to diff against. Its new commits are the
+            # ones not already on the default branch. Every reachable commit is not the
+            # range: that is the default branch's whole history, and every new branch cut
+            # from it would be judged on commits that are not its own, while the same
+            # commits pass as the pull request's range.
+            if [ -z "$default" ]; then
+              echo "::error::the event names no default branch to diff a new branch against"
+              exit 1
+            fi
+            ref="refs/remotes/origin/$default"
+            if ! git rev-parse -q --verify "$ref^{commit}" >/dev/null; then
+              git fetch --no-tags --quiet origin "+refs/heads/$default:$ref" || true
+            fi
+            if ! git rev-parse -q --verify "$ref^{commit}" >/dev/null; then
+              echo "::error::default branch $default not found; refusing to check the whole history"
+              exit 1
+            fi
+            range="$ref..$head"
+          fi
+          echo "DCO range: $range"
+
+          commits="$(git rev-list "$range")"
+          # Never report success over an empty range. If it resolves to nothing, fall
+          # back to the tip, which always exists: a pass here must mean a commit was
+          # inspected.
+          if [ -z "$commits" ]; then
+            commits="$head"
+          fi
+
+          fail=0
+          count=0
+          for sha in $commits; do
+            count=$((count + 1))
+            author="$(git show -s --format='%an <%ae>' "$sha")"
+            if ! git show -s --format='%B' "$sha" | grep -qiF "Signed-off-by: $author"; then
+              echo "::error::commit $sha by $author carries no matching Signed-off-by"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "Sign off with: git commit -s   (existing commit: git commit --amend -s)"
+            exit 1
+          fi
+          echo "DCO OK: $count commit(s) inspected, each signed off by its author"
+
+  no-secret-in-dist:
+    # No private key material may reach a wheel or sdist built from this
+    # repository. Demo keys are minted in memory per test run and written nowhere, so
+    # nothing should ever match; the patterns below are a standing tripwire, so a key
+    # introduced by accident fails in this job rather than inside a built artifact.
+    runs-on: ubuntu-24.04
+    # Every Python the documents name, 3.11 or later, up to the newest release, as in every
+    # job of this workflow that runs Python.
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Build sdist + wheel
+        run: |
+          python -m pip install pip==26.2.1 build==1.6.1
+          python -m build
+      - name: Assert no private key or tests inside artifacts
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          fail=0
+
+          # Count first, and refuse to pass on nothing. A loop over `dist/*.tar.gz` and
+          # `dist/*.whl` alone would not: when a glob matches nothing bash leaves the
+          # pattern as a literal string, `tar`/`unzip` then fail on a file named
+          # `dist/*.whl` inside an `if` condition, which does not trip `set -e`, `grep`
+          # receives empty input, and the step would print "artifacts clean" having
+          # inspected nothing. A check that reports success when it did not run is worse
+          # than no check.
+          sdists=(dist/*.tar.gz)
+          wheels=(dist/*.whl)
+          echo "found ${#sdists[@]} sdist(s) and ${#wheels[@]} wheel(s)"
+          if [ "${#sdists[@]}" -eq 0 ] || [ "${#wheels[@]}" -eq 0 ]; then
+            echo "::error::expected at least one sdist and one wheel in dist/; nothing was inspected"
+            exit 1
+          fi
+
+          # Name-based patterns only catch files whose *path* looks wrong. Key material
+          # embedded in a shipped file is invisible to them, so the content scan below
+          # is not redundant with this one.
+          FORBIDDEN_PATHS='_key\.json|(^|/)tests/'
+
+          for art in "${sdists[@]}"; do
+            echo "== $art =="
+            if tar -tzf "$art" | grep -E "$FORBIDDEN_PATHS"; then
+              echo "::error::forbidden paths in $art"; fail=1
+            fi
+          done
+          for art in "${wheels[@]}"; do
+            echo "== $art =="
+            if unzip -l "$art" | awk '{print $4}' | grep -E "$FORBIDDEN_PATHS"; then
+              echo "::error::forbidden paths in $art"; fail=1
+            fi
+          done
+
+          # Content scan: a 64-hex private scalar next to a `private_key` label, in any
+          # shipped file regardless of its name.
+          for art in "${sdists[@]}"; do
+            if tar -xzOf "$art" | grep -aE '"private_key(_hex)?"[[:space:]]*:[[:space:]]*"[0-9a-fA-F]{64}"'; then
+              echo "::error::private key material inside $art"; fail=1
+            fi
+          done
+          for art in "${wheels[@]}"; do
+            if unzip -p "$art" | grep -aE '"private_key(_hex)?"[[:space:]]*:[[:space:]]*"[0-9a-fA-F]{64}"'; then
+              echo "::error::private key material inside $art"; fail=1
+            fi
+          done
+
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "artifacts clean: ${#sdists[@]} sdist(s) and ${#wheels[@]} wheel(s) inspected, no key material or tests packaged"

@@ -1,0 +1,278 @@
+name: release
+
+# A release is cut by pushing a tag vX.Y.Z, and by nothing else. The workflow runs the CI on the
+# tagged commit, builds the sdist and the wheel from it, writes SHA256SUMS and a CycloneDX SBOM,
+# attests every file in a job that runs no installed code, and creates a DRAFT GitHub release with the files attached. Publishing the
+# draft, and any upload to a package index, is the maintainer's own act: this workflow has no
+# step that does either. docs/maintainers/releasing.md describes the whole procedure.
+#
+# Run by hand (workflow_dispatch), it is a dry run: it builds the files of the chosen branch,
+# attests them when the repository is public, keeps them as a run artifact, and creates no
+# release. A dry run on a tag is refused: a tag is released by pushing it.
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+
+# Nothing at the top level; each job asks for what it needs and no more.
+permissions: {}
+
+jobs:
+  ci:
+    # Every job of ci.yml, on the commit being released, as on a pull request. After verify, so
+    # that a bad tag stops before the matrix starts.
+    needs: verify
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  verify:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.preflight.outputs.version }}
+    steps:
+      - name: A dry run runs on a branch
+        if: github.event_name != 'push' && github.ref_type == 'tag'
+        run: |
+          echo "::error::a dry run runs on a branch; a tag is released by pushing it"
+          exit 1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The whole history and every branch, for the default-branch check below. The tag
+          # itself is not read from this clone (see that check).
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: The tag names the package version, and the CHANGELOG has its section
+        # The version is read here, once; every later job takes it from this job's outputs.
+        id: preflight
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = "push" ]; then
+            python tools/release_build.py preflight --tag "$TAG"
+          else
+            python tools/release_build.py preflight
+          fi
+          echo "version=$(python tools/release_build.py version)" >> "$GITHUB_OUTPUT"
+      - name: The tag is annotated, signed, points at this commit, and is on the default branch
+        if: github.event_name == 'push'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          # The tag is asked of GitHub's API rather than of the clone: only the API reports whether
+          # GitHub verified the tag's signature, and it answers for the tag as GitHub holds it.
+          # Every job checks out $GITHUB_SHA, the commit the tag must name.
+          # Each answer is kept in a variable before it is read: bash checks the status of a
+          # command substitution, and not that of a process substitution, `read < <(gh api ...)`.
+          if ! ref="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" --jq '[.object.type, .object.sha] | @tsv')"; then
+            echo "::error::GitHub's API gave no answer for the ref of tag $TAG"
+            exit 1
+          fi
+          IFS=$'\t' read -r ref_type tag_sha <<< "$ref"
+          if [ "$ref_type" != "tag" ]; then
+            if [ "$ref_type" = "commit" ]; then
+              echo "::error::tag $TAG is lightweight; a release tag is annotated and signed (git tag -s)"
+            else
+              echo "::error::the ref of tag $TAG names no tag object (type '$ref_type')"
+            fi
+            exit 1
+          fi
+          if ! tag="$(gh api "repos/$GITHUB_REPOSITORY/git/tags/$tag_sha" --jq '[.object.type, .object.sha, .verification.verified, .verification.reason] | @tsv')"; then
+            echo "::error::GitHub's API gave no answer for the tag object $tag_sha of $TAG"
+            exit 1
+          fi
+          IFS=$'\t' read -r target_type target_sha verified reason <<< "$tag"
+          if [ "$target_type" != "commit" ] || [ "$target_sha" != "$GITHUB_SHA" ]; then
+            echo "::error::tag $TAG names $target_type $target_sha, not the commit this run builds ($GITHUB_SHA)"
+            exit 1
+          fi
+          if [ "$verified" != "true" ]; then
+            echo "::error::tag $TAG carries no signature GitHub verifies ($reason)"
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" "refs/remotes/origin/$DEFAULT_BRANCH"; then
+            echo "::error::tag $TAG points at a commit that is not on $DEFAULT_BRANCH"
+            exit 1
+          fi
+          echo "tag $TAG: annotated, signed and verified, on $DEFAULT_BRANCH"
+
+  build:
+    # Builds, describes and sums the release files. It installs build tools and resolves the
+    # wheel's dependencies from the package index, so it holds no token that can sign or write:
+    # the attest job below signs, and runs none of that code.
+    needs: [ci, verify]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    # The digests of the sdist and the wheel as the build wrote them, before the reproducibility
+    # rebuild and the SBOM tool run third-party code in this job. A later step cannot change a
+    # step's outputs, so the attest job holds the files it attests to these, and a file rewritten
+    # after the build is refused there however SHA256SUMS was written.
+    outputs:
+      sdist-sha256: ${{ steps.build.outputs.sdist-sha256 }}
+      wheel-sha256: ${{ steps.build.outputs.wheel-sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Build the sdist and the wheel from a clean tree
+        # The digests are taken here, before anything else runs.
+        id: build
+        shell: bash
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          set -euo pipefail
+          python -m pip install pip==26.2.1 build==1.6.1
+          python tools/release_build.py build --outdir release-files
+          echo "sdist-sha256=$(sha256sum -- "release-files/loquitur_schemas-$VERSION.tar.gz" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+          echo "wheel-sha256=$(sha256sum -- "release-files/loquitur_schemas-$VERSION-py3-none-any.whl" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+      - name: A second build of the wheel gives the same bytes
+        shell: bash
+        env:
+          BUILT: ${{ steps.build.outputs.wheel-sha256 }}
+        run: |
+          set -euo pipefail
+          printed="$(python tools/local_wheel_gate.py --check-reproducible | sed -n 's/^wheel_reproducible_ok sha256=//p')"
+          if [ -z "$printed" ] || [ "$printed" != "$BUILT" ]; then
+            echo "::error::the wheel built ($BUILT) is not the one a second build gives (${printed:-none})"
+            exit 1
+          fi
+          echo "wheel sha256 $BUILT, rebuilt to the same bytes"
+      - name: Write the CycloneDX SBOM of the wheel installed with its dependencies
+        shell: bash
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+        run: |
+          set -euo pipefail
+          # The environment the SBOM describes: the wheel and the dependencies pip resolves for
+          # it, and nothing else, not even pip.
+          python -m venv --without-pip "$RUNNER_TEMP/installed"
+          python -m pip --python "$RUNNER_TEMP/installed/bin/python" install \
+            "release-files/loquitur_schemas-$VERSION-py3-none-any.whl"
+          # The SBOM tool, pinned exactly, in an environment of its own.
+          python -m venv "$RUNNER_TEMP/sbom-tool"
+          "$RUNNER_TEMP/sbom-tool/bin/python" -m pip install pip==26.2.1 cyclonedx-bom==7.5.0 cyclonedx-python-lib==11.12.0
+          "$RUNNER_TEMP/sbom-tool/bin/cyclonedx-py" environment \
+            --pyproject pyproject.toml --mc-type library --output-reproducible --of JSON \
+            -o "release-files/loquitur_schemas-$VERSION.cdx.json" \
+            "$RUNNER_TEMP/installed/bin/python"
+      - name: Write SHA256SUMS over the release files
+        run: python tools/release_build.py sums release-files
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-files
+          path: release-files/
+          if-no-files-found: error
+          retention-days: 14
+
+  attest:
+    # The only job that can sign. It checks out nothing and installs nothing: it takes the files
+    # the build job uploaded, checks that they are exactly the four release files, that they match
+    # SHA256SUMS and that the sdist and the wheel have the digests the build step took, and
+    # attests them.
+    needs: [verify, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-files
+          path: release-files
+      - name: The files are exactly the release files, and match SHA256SUMS
+        # The sdist and the wheel are also held to the digests the build step took before any other
+        # code ran in the build job, which SHA256SUMS, written at the end of that job, cannot show.
+        shell: bash
+        working-directory: release-files
+        env:
+          VERSION: ${{ needs.verify.outputs.version }}
+          SDIST_SHA256: ${{ needs.build.outputs.sdist-sha256 }}
+          WHEEL_SHA256: ${{ needs.build.outputs.wheel-sha256 }}
+        run: |
+          set -euo pipefail
+          listed="$(printf '%s\n' "loquitur_schemas-$VERSION-py3-none-any.whl" \
+            "loquitur_schemas-$VERSION.cdx.json" "loquitur_schemas-$VERSION.tar.gz" | LC_ALL=C sort)"
+          expected="$(printf '%s\nSHA256SUMS\n' "$listed" | LC_ALL=C sort)"
+          present="$(find . -mindepth 1 -printf '%P\n' | LC_ALL=C sort)"
+          if [ "$present" != "$expected" ]; then
+            echo "::error::the artifact holds other files than the release files:"
+            printf '%s\n' "$present"
+            exit 1
+          fi
+          summed="$(cut -c 67- SHA256SUMS | LC_ALL=C sort)"
+          if [ "$summed" != "$listed" ]; then
+            echo "::error::SHA256SUMS lists other files than the release files:"
+            printf '%s\n' "$summed"
+            exit 1
+          fi
+          sha256sum --strict -c SHA256SUMS
+          if ! printf '%s  %s\n' "$SDIST_SHA256" "loquitur_schemas-$VERSION.tar.gz" \
+            "$WHEEL_SHA256" "loquitur_schemas-$VERSION-py3-none-any.whl" | sha256sum --strict -c -; then
+            echo "::error::the sdist or the wheel is not the file the build step wrote"
+            exit 1
+          fi
+      - name: Attest the provenance of every release file
+        # Artifact attestations need a public repository on the plans below GitHub Enterprise
+        # Cloud. A dry run in a private repository skips them and says so; a tag push never does.
+        if: github.event_name == 'push' || !github.event.repository.private
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: release-files/*
+      - name: Attest the SBOM of the sdist and the wheel
+        if: github.event_name == 'push' || !github.event.repository.private
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            release-files/*.whl
+            release-files/*.tar.gz
+          sbom-path: release-files/loquitur_schemas-${{ needs.verify.outputs.version }}.cdx.json
+      - name: Say that this dry run attested nothing
+        if: github.event_name != 'push' && github.event.repository.private
+        run: echo "::notice::private repository, so this dry run built, summed and described the files and attested none"
+
+  release:
+    # Only for a pushed tag; a dry run stops at the artifact above.
+    needs: attest
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-files
+          path: release-files
+      - name: Check the files against SHA256SUMS
+        working-directory: release-files
+        run: sha256sum --strict -c SHA256SUMS
+      - name: Create the release as a draft, with every file attached
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" release-files/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft \
+            --verify-tag \
+            --title "loquitur-schemas $TAG" \
+            --notes "Built from tag $TAG by .github/workflows/release.yml. The changes are in CHANGELOG.md, section [${TAG#v}]. docs/maintainers/releasing.md says how to check these files."

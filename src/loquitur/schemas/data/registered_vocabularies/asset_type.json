@@ -1,0 +1,20 @@
+{
+  "object_type": "registered_vocabulary",
+  "schema_version": "v1",
+  "kind": "asset_type",
+  "version": "1.0.0",
+  "values": {
+    "fund_nav": {
+      "since": "1.0.0",
+      "status": "active",
+      "title": "Fund net asset value",
+      "profile": null
+    },
+    "property": {
+      "since": "1.0.0",
+      "status": "active",
+      "title": "Real property",
+      "profile": null
+    }
+  }
+}

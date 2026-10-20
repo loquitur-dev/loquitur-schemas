@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.loquitur.dev/v1/registered_vocabulary.schema.json",
+  "title": "Loquitur registered vocabulary",
+  "description": "One version of the registered vocabulary of one kind: the values a governed member of a public object may take, each with the version that registered it, its status, a title and the profile that defines it. The kinds are closed here; the values are registered data, added or deprecated without a change to any schema (verification-vocabularies.md sections 5 and 6). Two rules no keyword states are part of the document's contract: no value's since is later than the document's version, and asset_types is present on a value exactly when kind is workflow (section 6).",
+  "type": "object",
+  "required": [
+    "object_type",
+    "schema_version",
+    "kind",
+    "version",
+    "values"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "object_type": {
+      "type": "string",
+      "const": "registered_vocabulary"
+    },
+    "schema_version": {
+      "type": "string",
+      "const": "v1"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "asset_type",
+        "workflow",
+        "anchoring_method"
+      ],
+      "description": "The kind of value the document registers. The set of kinds is closed: adding one is a change to the protocol (verification-vocabularies.md section 10)."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,8})\\.(0|[1-9][0-9]{0,8})\\.(0|[1-9][0-9]{0,8})$",
+      "description": "The version of this vocabulary, MAJOR.MINOR.PATCH with no pre-release label. Adding or deprecating a value is a minor version, correcting a title a patch (verification-vocabularies.md section 9)."
+    },
+    "values": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z0-9][a-z0-9_]{0,63}$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/RegisteredValue"
+      },
+      "description": "The registered values, by value. A value is never removed, renamed or reinterpreted."
+    }
+  },
+  "$defs": {
+    "RegisteredValue": {
+      "type": "object",
+      "required": [
+        "since",
+        "status",
+        "title",
+        "profile"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "since": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]{0,8})\\.(0|[1-9][0-9]{0,8})\\.(0|[1-9][0-9]{0,8})$",
+          "description": "The version of the vocabulary that registered the value; never later than the document's version, and never changed."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "deprecated"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "profile": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "description": "The profile that defines the value, or null when no profile document defines it yet."
+        },
+        "asset_types": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9_]{0,63}$"
+          },
+          "description": "For a workflow, the asset types it applies to. Informative in this version: no verifier checks that a workflow and an asset type belong together."
+        }
+      }
+    }
+  }
+}

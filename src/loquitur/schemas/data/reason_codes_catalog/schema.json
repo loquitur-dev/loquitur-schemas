@@ -1,0 +1,328 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.loquitur.dev/v1/reason_codes_catalog.schema.json",
+  "title": "Loquitur reason code description catalog",
+  "description": "Catalog of human-readable descriptions for loquitur.reason_codes.v1. Each entry maps a machine-readable reason code to deterministic, audience-specific narrative content for the verdict explainability layer (the versioned reason-code catalog).",
+  "type": "object",
+  "required": [
+    "catalog_version",
+    "reason_code_vocabulary",
+    "audiences",
+    "entries",
+    "composition_templates"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "catalog_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of this catalog. Bumps when wording changes; new entries are minor; removed entries are major."
+    },
+    "reason_code_vocabulary": {
+      "type": "string",
+      "const": "loquitur.reason_codes.v1",
+      "description": "Pinned to the reason code vocabulary this catalog describes. Catalog must be re-issued for any new vocabulary version."
+    },
+    "audiences": {
+      "type": "array",
+      "const": [
+        "technical",
+        "compliance",
+        "executive"
+      ],
+      "items": {
+        "type": "string",
+        "enum": [
+          "technical",
+          "compliance",
+          "executive"
+        ]
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "description": "The fixed audience sequence, in this exact order. Order is contract here, not presentation: the reference loader compares positionally (tuple(audiences) != CATALOG_AUDIENCES), so a set-shaped constraint would accept a catalog the reference implementation rejects: ['executive','technical','compliance'] would validate and then fail to load. Adding a new audience is a major version bump."
+    },
+    "entries": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Z][A-Z0-9_]*$": {
+          "$ref": "#/$defs/CatalogEntry"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Map of reason code identifier to its catalog entry. The key pattern is the whole of what this schema checks, and deliberately so: this file is where loquitur.reason_codes.v1 is defined, so closing the keys over the vocabulary here would mean a second hand-maintained copy of every code inside the file that defines them -- a second copy of a value, which can drift from the first. Key parity with the published enums, and the absence of gaps, are gated by test instead: tests/test_reason_code_vocabulary_self_contained.py and tests/test_verdict_grounds.py of loquitur-schemas both fail on an entries map that is empty or missing a published code."
+    },
+    "composition_templates": {
+      "$ref": "#/$defs/CompositionTemplates",
+      "description": "Audience-specific verdict lead and closing templates used by deterministic narrative renderers. These templates keep reason-code catalog wording as the single source of truth instead of duplicating business-critical prose in verifier code."
+    }
+  },
+  "$defs": {
+    "CompositionTemplates": {
+      "type": "object",
+      "required": [
+        "technical",
+        "compliance",
+        "executive"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "technical": {
+          "$ref": "#/$defs/AudienceCompositionTemplates"
+        },
+        "compliance": {
+          "$ref": "#/$defs/AudienceCompositionTemplates"
+        },
+        "executive": {
+          "$ref": "#/$defs/AudienceCompositionTemplates"
+        }
+      }
+    },
+    "AudienceCompositionTemplates": {
+      "type": "object",
+      "required": [
+        "offline_verification",
+        "registry_entry",
+        "common"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "offline_verification": {
+          "$ref": "#/$defs/ContextCompositionTemplates"
+        },
+        "registry_entry": {
+          "$ref": "#/$defs/ContextCompositionTemplates"
+        },
+        "common": {
+          "$ref": "#/$defs/CommonCompositionTemplates"
+        }
+      }
+    },
+    "ContextCompositionTemplates": {
+      "type": "object",
+      "required": [
+        "lead"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "lead": {
+          "$ref": "#/$defs/VerdictTemplateSet"
+        }
+      }
+    },
+    "CommonCompositionTemplates": {
+      "type": "object",
+      "required": [
+        "closing"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "closing": {
+          "$ref": "#/$defs/ClosingTemplateSet"
+        }
+      }
+    },
+    "VerdictTemplateSet": {
+      "type": "object",
+      "required": [
+        "PASS",
+        "WARN",
+        "REVIEW",
+        "FAIL"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "PASS": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "REVIEW": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "FAIL": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "WARN": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        }
+      }
+    },
+    "ClosingTemplateSet": {
+      "type": "object",
+      "required": [
+        "PASS",
+        "WARN",
+        "REVIEW",
+        "FAIL_SINGLE",
+        "FAIL_MULTI",
+        "FAIL_AUTHORIZATION",
+        "FAIL_SIGNATURE"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "PASS": {
+          "type": "string",
+          "maxLength": 800
+        },
+        "WARN": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "REVIEW": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "FAIL_SINGLE": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "FAIL_MULTI": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "FAIL_AUTHORIZATION": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        },
+        "FAIL_SIGNATURE": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 800
+        }
+      }
+    },
+    "CatalogEntry": {
+      "type": "object",
+      "required": [
+        "code",
+        "severity",
+        "category",
+        "technical",
+        "compliance",
+        "executive"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "Reason code identifier. It must equal the map key and JSON Schema cannot say so -- no keyword binds a value to its parent's property name -- so the equality is gated in loquitur-schemas, tests/test_reason_codes_catalog.py::test_every_entry_code_matches_map_key. The pattern is all this schema can assert."
+        },
+        "severity": {
+          "type": "string",
+          "enum": [
+            "info",
+            "warn",
+            "review",
+            "fail"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "integrity",
+            "coverage",
+            "freshness",
+            "conflict",
+            "policy",
+            "evidence",
+            "offline",
+            "materiality",
+            "valuation_crosscheck",
+            "authorization",
+            "vocabulary"
+          ],
+          "description": "The category of the entry. The name anchoring is reserved for method-neutral anchoring codes and is not a category of this version (reason-codes.md section 3)."
+        },
+        "technical": {
+          "$ref": "#/$defs/TechnicalNarrative"
+        },
+        "compliance": {
+          "$ref": "#/$defs/ComplianceNarrative"
+        },
+        "executive": {
+          "$ref": "#/$defs/ExecutiveNarrative"
+        }
+      }
+    },
+    "TechnicalNarrative": {
+      "type": "object",
+      "required": [
+        "headline",
+        "detail"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "headline": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 200,
+          "description": "Single-sentence technical summary in neutral voice."
+        },
+        "detail": {
+          "type": "string",
+          "minLength": 40,
+          "maxLength": 1200,
+          "description": "Composed paragraph for engineers. Vocabulary may include canonicalization, hash, RFC references, schema names. Neutral imperative voice for actions."
+        }
+      }
+    },
+    "ComplianceNarrative": {
+      "type": "object",
+      "required": [
+        "headline",
+        "consequence",
+        "required_action"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "headline": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 200,
+          "description": "Single-sentence assertive operational consequence."
+        },
+        "consequence": {
+          "type": "string",
+          "minLength": 40,
+          "maxLength": 800,
+          "description": "Composed paragraph naming the operational impact. Must be assertive (must / cannot / do not), never softened (should consider / may want to)."
+        },
+        "required_action": {
+          "type": "string",
+          "minLength": 20,
+          "maxLength": 400,
+          "description": "Specific action required of the bundle producer or downstream consumer. Imperative voice."
+        }
+      }
+    },
+    "ExecutiveNarrative": {
+      "type": "object",
+      "required": [
+        "summary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 30,
+          "maxLength": 400,
+          "description": "Short summary in non-technical assertive voice -- two or three sentences where the outcome needs them, one where it does not; eleven of the shipped entries are a single sentence, so this is editorial intent rather than a rule. No jargon, no hash references, no RFC citations. Stake the operational outcome plainly."
+        }
+      }
+    }
+  }
+}

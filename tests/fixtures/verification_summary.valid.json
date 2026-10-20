@@ -1,0 +1,25 @@
+{
+  "object_type": "verification_summary",
+  "schema_version": "v2",
+  "bundle_id": "bundle-001",
+  "status": "pass",
+  "reason_codes": [
+    "INTEGRITY_OK",
+    "AUTHORIZATION_VERIFIED",
+    "FRESHNESS_OK"
+  ],
+  "reason_code_vocabulary_version": "loquitur.reason_codes.v1",
+  "key_checks": [
+    {
+      "check_id": "integrity",
+      "status": "pass"
+    },
+    {
+      "check_id": "issuer_authorization",
+      "status": "pass"
+    }
+  ],
+  "policy_checks": {
+    "evaluation_clock_iso": "2026-05-01T12:30:00+00:00"
+  }
+}
